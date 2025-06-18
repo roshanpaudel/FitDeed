@@ -13,6 +13,7 @@ const navItems = [
   { href: '/workouts', label: 'Workouts' },
   { href: '/workouts/upload', label: 'Upload Plan', protected: true },
   { href: '/favorites', label: 'Favorites', protected: true },
+  { href: '/diet-plans', label: 'Diet Plans' },
 ];
 
 export default function Header() {

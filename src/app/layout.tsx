@@ -7,8 +7,8 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import { WorkoutProvider } from '@/contexts/WorkoutContext';
 
 export const metadata: Metadata = {
-  title: 'FitPlan - Your Personal Workout Planner',
-  description: 'Discover and manage your workout plans with FitPlan.',
+  title: 'FitDeed - Your Personal Workout Planner',
+  description: 'Discover and manage your workout plans with FitDeed.',
 };
 
 export default function RootLayout({
