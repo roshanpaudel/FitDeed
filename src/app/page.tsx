@@ -44,8 +44,7 @@ export default function HomePage() {
         <h2 className="text-3xl font-bold font-headline mb-8 text-center">Workout Categories</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {categories.map((category: Category, index: number) => (
-            <Link key={category.id} href={`/workouts?category=${category.id}`} passHref legacyBehavior>
-              <a className="block group animate-slideInUp" style={{ animationDelay: `${0.2 + index * 0.1}s` }}>
+            <Link key={category.id} href={`/workouts?category=${category.id}`} passHref className="block group animate-slideInUp" style={{ animationDelay: `${0.2 + index * 0.1}s` }}>
                 <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 ease-in-out transform hover:-translate-y-1 h-full flex flex-col">
                   <CardHeader className="p-0 relative h-48">
                     <Image
@@ -71,7 +70,6 @@ export default function HomePage() {
                      </Button>
                   </CardContent>
                 </Card>
-              </a>
             </Link>
           ))}
         </div>

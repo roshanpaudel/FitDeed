@@ -24,8 +24,7 @@ export default function WorkoutCard({ plan }: WorkoutCardProps) {
   };
 
   return (
-    <Link href={`/workouts/${plan.id}`} passHref legacyBehavior>
-      <a className="block group_ animate-fadeIn hover:shadow-xl transition-shadow duration-300 rounded-lg">
+    <Link href={`/workouts/${plan.id}`} passHref className="block group_ animate-fadeIn hover:shadow-xl transition-shadow duration-300 rounded-lg">
         <Card className="h-full flex flex-col overflow-hidden transition-all duration-300 group-hover:border-primary">
           <CardHeader className="p-0">
             <div className="relative w-full h-48 md:h-56">
@@ -77,7 +76,6 @@ export default function WorkoutCard({ plan }: WorkoutCardProps) {
             </Button>
           </CardFooter>
         </Card>
-      </a>
     </Link>
   );
 }
