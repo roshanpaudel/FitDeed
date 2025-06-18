@@ -1,0 +1,88 @@
+import type { WorkoutPlan, Category } from '@/types';
+
+export const mockCategories: Category[] = [
+  { id: 'strength', name: 'Strength Training', imageUrl: 'https://placehold.co/400x300.png', description: 'Build muscle and increase power.' },
+  { id: 'cardio', name: 'Cardiovascular', imageUrl: 'https://placehold.co/400x300.png', description: 'Improve heart health and endurance.' },
+  { id: 'flexibility', name: 'Flexibility & Mobility', imageUrl: 'https://placehold.co/400x300.png', description: 'Enhance range of motion and prevent injuries.' },
+  { id: 'hiit', name: 'HIIT', imageUrl: 'https://placehold.co/400x300.png', description: 'High-Intensity Interval Training for efficient fat burning.' },
+];
+
+export const mockWorkoutPlans: WorkoutPlan[] = [
+  {
+    id: 'plan1',
+    name: 'Full Body Blast',
+    description: 'A comprehensive full-body workout designed to build strength and endurance.',
+    category: 'strength',
+    instructions: [
+      'Warm-up: 5 minutes of light cardio (jogging in place, jumping jacks).',
+      'Squats: 3 sets of 10-12 reps.',
+      'Push-ups: 3 sets of as many reps as possible (AMRAP).',
+      'Rows (Dumbbell or Resistance Band): 3 sets of 10-12 reps per arm.',
+      'Overhead Press: 3 sets of 10-12 reps.',
+      'Plank: 3 sets, hold for 30-60 seconds.',
+      'Cool-down: 5 minutes of stretching.',
+    ],
+    mediaUrl: 'https://www.w3schools.com/html/mov_bbb.mp4', // Example video
+    imageUrl: 'https://placehold.co/600x400.png',
+    duration: "60 minutes",
+    difficulty: "Intermediate",
+  },
+  {
+    id: 'plan2',
+    name: 'Cardio Core Burner',
+    description: 'Elevate your heart rate and sculpt your core with this dynamic routine.',
+    category: 'cardio',
+    instructions: [
+      'Warm-up: 5 minutes dynamic stretching.',
+      'Jumping Jacks: 3 sets of 30 seconds, 15 seconds rest.',
+      'High Knees: 3 sets of 30 seconds, 15 seconds rest.',
+      'Burpees: 3 sets of 10 reps.',
+      'Mountain Climbers: 3 sets of 30 seconds, 15 seconds rest.',
+      'Crunches: 3 sets of 20 reps.',
+      'Leg Raises: 3 sets of 15 reps.',
+      'Cool-down: 5 minutes static stretching.',
+    ],
+    imageUrl: 'https://placehold.co/600x400.png',
+    duration: "45 minutes",
+    difficulty: "Beginner",
+  },
+  {
+    id: 'plan3',
+    name: 'Morning Mobility Flow',
+    description: 'Start your day with gentle movements to improve flexibility and awaken your body.',
+    category: 'flexibility',
+    instructions: [
+      'Neck Stretches: Hold each side for 30 seconds.',
+      'Shoulder Rolls: 10 forward, 10 backward.',
+      'Cat-Cow Stretch: 10 reps.',
+      'Downward Dog: Hold for 30-60 seconds.',
+      'Child\'s Pose: Hold for 60 seconds.',
+      'Hip Circles: 10 each direction.',
+      'Hamstring Stretch: Hold each leg for 30 seconds.',
+    ],
+    imageUrl: 'https://placehold.co/600x400.png',
+    duration: "20 minutes",
+    difficulty: "Beginner",
+  },
+  {
+    id: 'plan4',
+    name: 'HIIT Power Intervals',
+    description: 'Short bursts of intense exercise followed by brief recovery periods.',
+    category: 'hiit',
+    instructions: [
+      'Warm-up: 3 minutes light cardio.',
+      'Sprint in place: 30 seconds.',
+      'Rest: 15 seconds.',
+      'Jump Squats: 30 seconds.',
+      'Rest: 15 seconds.',
+      'Push-ups: 30 seconds.',
+      'Rest: 15 seconds.',
+      'Repeat circuit 4-5 times.',
+      'Cool-down: 5 minutes stretching.',
+    ],
+    mediaUrl: 'https://www.w3schools.com/html/mov_bbb.mp4',
+    imageUrl: 'https://placehold.co/600x400.png',
+    duration: "30 minutes",
+    difficulty: "Advanced",
+  },
+];
