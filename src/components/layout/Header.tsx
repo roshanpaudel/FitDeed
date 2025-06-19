@@ -5,8 +5,10 @@ import { Dumbbell, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import AuthButton from '@/components/AuthButton';
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { SheetTitle } from "@/components/ui/sheet";
 import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 
 const navItems = [
   { href: '/', label: 'Home' },
@@ -52,6 +54,9 @@ export default function Header() {
               </Button>
             </SheetTrigger>
             <SheetContent side="right" className="w-[280px] bg-card p-6">
+              <VisuallyHidden>
+                <SheetTitle>Mobile Navigation Menu</SheetTitle>
+              </VisuallyHidden>
               <nav className="flex flex-col gap-4 mt-8">
                 {accessibleNavItems.map((item) => (
                    <Button key={item.href} variant="ghost" asChild onClick={() => setMobileMenuOpen(false)}>

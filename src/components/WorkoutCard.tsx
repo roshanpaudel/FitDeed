@@ -35,6 +35,7 @@ export default function WorkoutCard({ plan }: WorkoutCardProps) {
                 objectFit="cover"
                 className="transition-transform duration-300 group-hover:scale-105"
                 data-ai-hint="fitness workout"
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
               />
             </div>
           </CardHeader>

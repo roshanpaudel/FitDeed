@@ -7,9 +7,10 @@ import { Loader2 } from 'lucide-react';
 
 interface ProtectedPageProps {
   children: React.ReactNode;
+  componentLoading?: boolean; // Add componentLoading prop
 }
 
-const ProtectedPage: React.FC<ProtectedPageProps> = ({ children }) => {
+const ProtectedPage: React.FC<ProtectedPageProps> = ({ children, componentLoading = false }) => {
   const { user, loading } = useAuth();
   const router = useRouter();
 

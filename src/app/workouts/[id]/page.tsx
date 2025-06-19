@@ -64,6 +64,7 @@ export default function WorkoutDetailPage() {
               alt={plan.name}
               layout="fill"
               objectFit="cover"
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 50vw"
               data-ai-hint="workout exercise"
             />
              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent"></div>

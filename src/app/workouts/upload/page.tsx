@@ -51,8 +51,8 @@ const dietPlanFormSchema = z.object({
 type DietPlanFormValues = z.infer<typeof dietPlanFormSchema>;
 
 function UploadPlanPageContent() {
-  const { categories: workoutCategories, addWorkoutPlan } = useWorkouts();
-  const { categories: dietCategories, addDietPlan } = useDietPlans();
+  const { categories: workoutCategories, addWorkoutPlan, loading: workoutLoading } = useWorkouts();
+  const { categories: dietCategories, addDietPlan, loading: dietLoading } = useDietPlans();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("workout");
 
@@ -109,6 +109,10 @@ function UploadPlanPageContent() {
     dietForm.reset();
   }
 
+  // Indicate loading if either workout or diet categories are being fetched
+  const combinedLoading = workoutLoading || dietLoading;
+
+  // Note: The loading state will be handled by the parent ProtectedPage
   return (
     <div className="max-w-2xl mx-auto py-8 animate-fadeIn">
       <Card className="shadow-lg">
@@ -390,8 +394,10 @@ function UploadPlanPageContent() {
 }
 
 export default function UploadPlanPage() {
+   const { loading: workoutLoading } = useWorkouts();
+   const { loading: dietLoading } = useDietPlans();
   return (
-    <ProtectedPage>
+    <ProtectedPage componentLoading={workoutLoading || dietLoading}>
       <UploadPlanPageContent />
     </ProtectedPage>
   );
