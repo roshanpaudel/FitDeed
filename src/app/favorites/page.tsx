@@ -1,3 +1,4 @@
+
 'use client';
 
 import WorkoutCard from '@/components/WorkoutCard';
@@ -13,12 +14,12 @@ function FavoritesPageContent() {
   const favoriteWorkouts = getFavoriteWorkouts();
 
   if (loading) {
-     return <div className="text-center py-12 text-muted-foreground">Loading favorites...</div>;
+     return <div className="text-center py-12 text-muted-foreground">Loading My Plans...</div>;
   }
 
   return (
     <div className="space-y-8 animate-fadeIn">
-      <h1 className="text-3xl font-bold font-headline mb-8">My Favorite Workout Plans</h1>
+      <h1 className="text-3xl font-bold font-headline mb-8">My Workout Plans</h1>
       {favoriteWorkouts.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {favoriteWorkouts.map((plan: WorkoutPlan) => (
@@ -28,7 +29,7 @@ function FavoritesPageContent() {
       ) : (
         <div className="text-center py-12 bg-card rounded-lg shadow p-8">
           <HeartCrack className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-          <p className="text-xl text-muted-foreground mb-4">You haven't favorited any workout plans yet.</p>
+          <p className="text-xl text-muted-foreground mb-4">You haven't saved any workout plans yet.</p>
           <Button asChild>
             <Link href="/workouts">Explore Workouts</Link>
           </Button>

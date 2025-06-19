@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -15,7 +16,7 @@ const navItems = [
   { href: '/workouts', label: 'Workouts' },
   { href: '/diet-plans', label: 'Diet Plans' },
   { href: '/workouts/upload', label: 'Upload Plan', protected: true },
-  { href: '/favorites', label: 'Favorites', protected: true },
+  { href: '/favorites', label: 'My Plans', protected: true },
 ];
 
 export default function Header() {
