@@ -1,4 +1,5 @@
-import type { WorkoutPlan, Category } from '@/types';
+
+import type { WorkoutPlan, Category, DietPlan, DietCategory } from '@/types';
 
 export const mockCategories: Category[] = [
   { id: 'strength', name: 'Strength Training', imageUrl: 'https://placehold.co/400x300.png', description: 'Build muscle and increase power.' },
@@ -84,5 +85,53 @@ export const mockWorkoutPlans: WorkoutPlan[] = [
     imageUrl: 'https://placehold.co/600x400.png',
     duration: "30 minutes",
     difficulty: "Advanced",
+  },
+];
+
+
+export const mockDietCategories: DietCategory[] = [
+  { id: 'weight-loss', name: 'Weight Loss', imageUrl: 'https://placehold.co/400x300.png', description: 'Plans focused on calorie deficit for losing weight.' },
+  { id: 'muscle-gain', name: 'Muscle Gain', imageUrl: 'https://placehold.co/400x300.png', description: 'High-protein plans to support muscle growth.' },
+  { id: 'balanced', name: 'Balanced Diet', imageUrl: 'https://placehold.co/400x300.png', description: 'Nutritionally complete plans for overall health.' },
+  { id: 'vegan', name: 'Vegan', imageUrl: 'https://placehold.co/400x300.png', description: 'Plant-based diet plans.' },
+  { id: 'keto', name: 'Ketogenic', imageUrl: 'https://placehold.co/400x300.png', description: 'Low-carb, high-fat diet plans.' },
+];
+
+export const mockDietPlans: DietPlan[] = [
+  {
+    id: 'diet1',
+    name: 'Lean Gain Diet',
+    description: 'A balanced diet plan for lean muscle gain, focusing on whole foods.',
+    category: 'muscle-gain',
+    instructions: [
+      'Breakfast: Oatmeal with protein powder and berries.',
+      'Snack: Greek yogurt with almonds.',
+      'Lunch: Grilled chicken salad with mixed greens and quinoa.',
+      'Snack: Apple slices with peanut butter.',
+      'Dinner: Baked salmon with roasted vegetables and brown rice.',
+    ],
+    caloriesPerDay: '2500-2800 kcal',
+    protein: '150-180g',
+    carbs: '250-300g',
+    fat: '70-80g',
+    imageUrl: 'https://placehold.co/600x400.png',
+  },
+  {
+    id: 'diet2',
+    name: 'Vegan Weight Management',
+    description: 'A plant-based diet plan designed for sustainable weight loss.',
+    category: 'vegan',
+    instructions: [
+      'Breakfast: Tofu scramble with spinach and whole-wheat toast.',
+      'Snack: Handful of mixed nuts.',
+      'Lunch: Lentil soup with a side of whole-grain bread.',
+      'Snack: Hummus with carrot and cucumber sticks.',
+      'Dinner: Chickpea curry with brown rice and steamed broccoli.',
+    ],
+    caloriesPerDay: '1800-2000 kcal',
+    protein: '70-90g',
+    carbs: '200-240g',
+    fat: '60-70g',
+    imageUrl: 'https://placehold.co/600x400.png',
   },
 ];
