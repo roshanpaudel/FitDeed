@@ -89,7 +89,7 @@ function UploadPlanPageContent() {
       instructions: data.instructions, // Already transformed by Zod
     });
     toast({
-      title: "Workout Plan Uploaded!",
+      title: "Workout Uploaded!",
       description: `${data.name} has been added to the list.`,
       variant: "default",
     });
@@ -102,7 +102,7 @@ function UploadPlanPageContent() {
         instructions: data.instructions, // Already transformed by Zod
     });
     toast({
-      title: "Diet Plan Uploaded!",
+      title: "Diet Uploaded!",
       description: `${data.name} has been added to the list.`,
       variant: "default",
     });
@@ -119,15 +119,15 @@ function UploadPlanPageContent() {
         <CardHeader>
           <div className="flex items-center gap-3 mb-2">
             {activeTab === "workout" ? <Zap className="h-8 w-8 text-primary" /> : <Utensils className="h-8 w-8 text-primary" />}
-            <CardTitle className="text-3xl font-headline">Upload New Plan</CardTitle>
+            <CardTitle className="text-3xl font-headline">Upload New</CardTitle>
           </div>
-          <CardDescription>Share your favorite {activeTab === "workout" ? "workout routines" : "diet plans"} with the FitDeed community.</CardDescription>
+          <CardDescription>Share your favorite {activeTab === "workout" ? "workout routines" : "diets"} with the FitDeed community.</CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-6">
-              <TabsTrigger value="workout">Workout Plan</TabsTrigger>
-              <TabsTrigger value="diet">Diet Plan</TabsTrigger>
+              <TabsTrigger value="workout">Workout</TabsTrigger>
+              <TabsTrigger value="diet">Diet</TabsTrigger>
             </TabsList>
             <TabsContent value="workout">
               <Form {...workoutForm}>
@@ -152,7 +152,7 @@ function UploadPlanPageContent() {
                       <FormItem>
                         <FormLabel>Description</FormLabel>
                         <FormControl>
-                          <Textarea placeholder="Briefly describe the workout plan." {...field} />
+                          <Textarea placeholder="Briefly describe the workout." {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -250,7 +250,7 @@ function UploadPlanPageContent() {
                     />
                   </div>
                   <Button type="submit" className="w-full" size="lg">
-                    <UploadCloud className="mr-2 h-5 w-5" /> Upload Workout Plan
+                    <UploadCloud className="mr-2 h-5 w-5" /> Upload Workout
                   </Button>
                 </form>
               </Form>
@@ -263,7 +263,7 @@ function UploadPlanPageContent() {
                     name="name"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Diet Plan Name</FormLabel>
+                        <FormLabel>Diet Name</FormLabel>
                         <FormControl>
                           <Input placeholder="e.g., Healthy Vegan Meal Plan" {...field} />
                         </FormControl>
@@ -278,7 +278,7 @@ function UploadPlanPageContent() {
                       <FormItem>
                         <FormLabel>Description</FormLabel>
                         <FormControl>
-                          <Textarea placeholder="Briefly describe the diet plan." {...field} />
+                          <Textarea placeholder="Briefly describe the diet." {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -313,12 +313,12 @@ function UploadPlanPageContent() {
                     name="instructions"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Meal Plan Details / Instructions</FormLabel>
+                        <FormLabel>Meal Details / Instructions</FormLabel>
                         <FormControl>
                           <Textarea placeholder="Enter meal details, recipes, or guidelines. Each line can be a new meal or instruction." {...field} rows={6} />
                         </FormControl>
                          <FormDescription>
-                          Each line will be treated as a separate part of the plan.
+                          Each line will be treated as a separate part of the diet.
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -381,7 +381,7 @@ function UploadPlanPageContent() {
                       />
                   </div>
                   <Button type="submit" className="w-full" size="lg">
-                    <UploadCloud className="mr-2 h-5 w-5" /> Upload Diet Plan
+                    <UploadCloud className="mr-2 h-5 w-5" /> Upload Diet
                   </Button>
                 </form>
               </Form>
