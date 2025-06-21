@@ -119,7 +119,7 @@ function UploadPlanPageContent() {
         <CardHeader>
           <div className="flex items-center gap-3 mb-2">
             {activeTab === "workout" ? <Zap className="h-8 w-8 text-primary" /> : <Utensils className="h-8 w-8 text-primary" />}
-            <CardTitle className="text-3xl font-headline">Upload New</CardTitle>
+            <CardTitle className="text-3xl font-headline">{activeTab === 'workout' ? 'Upload New Workout' : 'Upload New Diet'}</CardTitle>
           </div>
           <CardDescription>Share your favorite {activeTab === "workout" ? "workout routines" : "diets"} with the FitDeed community.</CardDescription>
         </CardHeader>
