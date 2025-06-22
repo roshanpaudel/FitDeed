@@ -83,36 +83,32 @@ function UploadPlanPageContent() {
     },
   });
 
-  function onWorkoutSubmit(data: WorkoutFormValues) {
-    addWorkoutPlan({
+  async function onWorkoutSubmit(data: WorkoutFormValues) {
+    await addWorkoutPlan({
       ...data,
       instructions: data.instructions, // Already transformed by Zod
     });
     toast({
       title: "Workout Uploaded!",
-      description: `${data.name} has been added to the list.`,
+      description: `${data.name} has been added to your database.`,
       variant: "default",
     });
     workoutForm.reset();
   }
 
-  function onDietPlanSubmit(data: DietPlanFormValues) {
-    addDietPlan({
+  async function onDietPlanSubmit(data: DietPlanFormValues) {
+    await addDietPlan({
         ...data,
         instructions: data.instructions, // Already transformed by Zod
     });
     toast({
       title: "Diet Uploaded!",
-      description: `${data.name} has been added to the list.`,
+      description: `${data.name} has been added to your database.`,
       variant: "default",
     });
     dietForm.reset();
   }
 
-  // Indicate loading if either workout or diet categories are being fetched
-  const combinedLoading = workoutLoading || dietLoading;
-
-  // Note: The loading state will be handled by the parent ProtectedPage
   return (
     <div className="max-w-2xl mx-auto py-8 animate-fadeIn">
       <Card className="shadow-lg">
@@ -249,8 +245,8 @@ function UploadPlanPageContent() {
                       )}
                     />
                   </div>
-                  <Button type="submit" className="w-full" size="lg">
-                    <UploadCloud className="mr-2 h-5 w-5" /> Upload Workout
+                  <Button type="submit" className="w-full" size="lg" disabled={workoutLoading}>
+                    <UploadCloud className="mr-2 h-5 w-5" /> {workoutLoading ? 'Uploading...' : 'Upload Workout'}
                   </Button>
                 </form>
               </Form>
@@ -294,7 +290,7 @@ function UploadPlanPageContent() {
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Select a diet category" />
-                            </SelectTrigger>
+                            </Trigger>
                           </FormControl>
                           <SelectContent>
                             {dietCategories.map(cat => (
@@ -380,8 +376,8 @@ function UploadPlanPageContent() {
                         )}
                       />
                   </div>
-                  <Button type="submit" className="w-full" size="lg">
-                    <UploadCloud className="mr-2 h-5 w-5" /> Upload Diet
+                  <Button type="submit" className="w-full" size="lg" disabled={dietLoading}>
+                    <UploadCloud className="mr-2 h-5 w-5" /> {dietLoading ? 'Uploading...' : 'Upload Diet'}
                   </Button>
                 </form>
               </Form>
