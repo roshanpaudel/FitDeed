@@ -126,7 +126,7 @@ export default function SignupPage() {
             </form>
           </Form>
         </CardContent>
-        <CardFooter className="flex flex-col items-center_ gap-2 pt-4">
+        <CardFooter className="flex flex-col items-center gap-2 pt-4">
           <p className="text-sm text-muted-foreground">
             Already have an account?{' '}
             <Button variant="link" asChild className="p-0 h-auto">
