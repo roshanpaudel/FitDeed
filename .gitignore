@@ -44,3 +44,6 @@ next-env.d.ts
 firebase-debug.log
 firestore-debug.log
 firestore-data.json
+/config/
+/config/fitdeed-1f2e2-firebase-adminsdk-fbsvc-c776031ef7.json
+importData.js
