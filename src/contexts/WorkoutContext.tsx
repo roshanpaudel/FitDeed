@@ -28,7 +28,7 @@ export const WorkoutProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useAuth(); // Get the current authenticated user
 
   useEffect(() => {
-    const fetchWorkoutData = async () => {
+    const fetchAllData = async () => {
       setLoading(true);
       try {
         // Fetch Categories
@@ -43,44 +43,31 @@ export const WorkoutProvider = ({ children }: { children: ReactNode }) => {
         const workoutPlansList = workoutPlanSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as WorkoutPlan));
         setWorkoutPlans(workoutPlansList);
 
-      } catch (error) {
-        console.error("Error fetching workout data from Firestore:", error);
-      } finally {
-        // Loading state will be set to false after fetching favorites as well
-      }
-    };
+        // Fetch Favorites only if a user is logged in
+        if (user && user.uid) {
+          const favoritesDocRef = doc(db, 'favorites', user.uid);
+          const favoritesDocSnap = await getDoc(favoritesDocRef);
 
-    const fetchFavorites = async () => {
-      if (!user || !user.uid) {
-        setFavoritePlanIds([]); // Clear favorites if user logs out
-        setLoading(false); // Ensure loading is false even if no user
- return;
-      }
-      try {
-        console.log('User object:', user);
-        console.log('User UID:', user?.uid);
-        const favoritesDocRef = doc(db, 'favorites', user.uid);
-        const favoritesDocSnap = await getDoc(favoritesDocRef);
-
-        if (favoritesDocSnap.exists()) {
-          const data = favoritesDocSnap.data();
-          // Assuming favorites are stored as an array named 'planIds'
-          setFavoritePlanIds((data?.planIds as string[]) || []);
+          if (favoritesDocSnap.exists()) {
+            setFavoritePlanIds(favoritesDocSnap.data()?.planIds || []);
+          } else {
+            setFavoritePlanIds([]);
+          }
         } else {
-          setFavoritePlanIds([]);
+          setFavoritePlanIds([]); // Clear favorites if no user
         }
       } catch (error) {
-        console.error("Error fetching favorites from Firestore:", error);
-         setFavoritePlanIds([]); // Clear favorites if user logs out
-         setLoading(false); // Ensure loading is false even if no user
+        console.error("Error fetching data from Firestore:", error);
+        // Reset state on error
+        setCategories([]);
+        setWorkoutPlans([]);
+        setFavoritePlanIds([]);
+      } finally {
+        setLoading(false);
       }
     };
 
-    fetchWorkoutData();
-    fetchFavorites();
-
-    // Clean up local storage logic
-    // localStorage.removeItem('fitplanFavorites');
+    fetchAllData();
   }, [user]); // Re-run effect when user changes (login/logout)
 
 
@@ -101,7 +88,7 @@ export const WorkoutProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const toggleFavorite = async (planId: string) => {
-    if (!user) {
+    if (!user || !user.uid) {
       // Handle case where user is not logged in (e.g., show a prompt to log in)
       console.log("Please log in to favorite plans.");
       // Optionally show a toast or redirect to login
@@ -110,8 +97,8 @@ export const WorkoutProvider = ({ children }: { children: ReactNode }) => {
 
     const isFavorited = favoritePlanIds.includes(planId);
     const updatedFavorites = isFavorited
-? favoritePlanIds.filter(id => id !== planId)
-: [...favoritePlanIds, planId];
+      ? favoritePlanIds.filter(id => id !== planId)
+      : [...favoritePlanIds, planId];
 
     setFavoritePlanIds(updatedFavorites); // Optimistic update
 
@@ -120,12 +107,11 @@ export const WorkoutProvider = ({ children }: { children: ReactNode }) => {
       await setDoc(favoritesDocRef, { planIds: updatedFavorites }, { merge: true }); // Use merge: true to not overwrite other fields if they exist
     } catch (error) {
       console.error("Error updating favorites in Firestore:", error);
-      // Revert the optimistic update if saving to Firestore fails
+      // Revert the optimistic update by performing the opposite action
       setFavoritePlanIds(prevIds =>
-      prevIds.includes(planId)
-        ? prevIds.filter(id => id !== planId)
-        : [...prevIds, planId]
-    );
+        isFavorited ? [...prevIds, planId] : prevIds.filter(id => id !== planId)
+      );
+    }
   };
 
   const getWorkoutById = (id: string) => {
@@ -142,4 +128,3 @@ export const WorkoutProvider = ({ children }: { children: ReactNode }) => {
     </WorkoutContext.Provider>
   );
 };
-

@@ -20,7 +20,7 @@ export interface Category {
 }
 
 export interface User {
-  id: string;
+  uid: string;
   email: string;
   name?: string;
 }

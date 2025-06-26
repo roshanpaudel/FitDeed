@@ -28,7 +28,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const login = (email: string, name: string = 'Fitness Enthusiast') => {
-    const mockUser: User = { id: Date.now().toString(), email, name };
+    const mockUser: User = { uid: Date.now().toString(), email, name };
     setUser(mockUser);
     localStorage.setItem('fitplanUser', JSON.stringify(mockUser));
   };
