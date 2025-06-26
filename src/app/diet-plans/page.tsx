@@ -11,7 +11,7 @@ import { ListFilter, Search, Loader2 } from 'lucide-react';
 import type { DietPlan } from '@/types'; // Assuming you will define this type
 
 function DietPlanListContent() {
-  const { dietPlans, categories, loading: dietPlansLoading } = useDietPlans(); // Renamed hook and variables
+  const { dietPlans, categories, loading } = useDietPlans();
   const searchParams = useSearchParams();
   const initialCategory = searchParams.get('category') || 'all';
 
@@ -27,7 +27,7 @@ function DietPlanListContent() {
     });
   }, [dietPlans, selectedCategory, searchTerm]); // Renamed variable
 
-  if (dietPlansLoading) { // Renamed variable
+  if (loading) {
     return (
       <div className="flex justify-center items-center min-h-[calc(100vh-300px)]">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
