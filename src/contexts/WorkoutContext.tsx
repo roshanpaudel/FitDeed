@@ -51,25 +51,26 @@ export const WorkoutProvider = ({ children }: { children: ReactNode }) => {
     };
 
     const fetchFavorites = async () => {
-      if (user) {
-        try {
-          const favoritesDocRef = doc(db, 'favorites', user.uid);
-          const favoritesDocSnap = await getDoc(favoritesDocRef);
+      if (!user || !user.uid) {
+        setFavoritePlanIds([]); // Clear favorites if user logs out
+        setLoading(false); // Ensure loading is false even if no user
+ return;
+      }
+      try {
+        console.log('User object:', user);
+        console.log('User UID:', user?.uid);
+        const favoritesDocRef = doc(db, 'favorites', user.uid);
+        const favoritesDocSnap = await getDoc(favoritesDocRef);
 
-          if (favoritesDocSnap.exists()) {
-            const data = favoritesDocSnap.data();
-            // Assuming favorites are stored as an array named 'planIds'
-            setFavoritePlanIds((data.planIds as string[]) || []);
-          } else {
-            setFavoritePlanIds([]);
-          }
-        } catch (error) {
-          console.error("Error fetching favorites from Firestore:", error);
-          setFavoritePlanIds([]); // Reset favorites on error
-        } finally {
-           setLoading(false);
+        if (favoritesDocSnap.exists()) {
+          const data = favoritesDocSnap.data();
+          // Assuming favorites are stored as an array named 'planIds'
+          setFavoritePlanIds((data?.planIds as string[]) || []);
+        } else {
+          setFavoritePlanIds([]);
         }
-      } else {
+      } catch (error) {
+        console.error("Error fetching favorites from Firestore:", error);
          setFavoritePlanIds([]); // Clear favorites if user logs out
          setLoading(false); // Ensure loading is false even if no user
       }
