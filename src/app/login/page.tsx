@@ -1,3 +1,4 @@
+
 'use client';
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -54,7 +55,7 @@ export default function LoginPage() {
     login(data.email, "User"); // Assuming 'User' as a default name on login
     toast({
       title: "Login Successful!",
-      description: "Welcome back to FitPlan.",
+      description: "Welcome back to FitDeed.",
     });
     const redirectPath = searchParams.get('redirect') || '/';
     router.push(redirectPath);
@@ -66,7 +67,7 @@ export default function LoginPage() {
         <CardHeader className="text-center">
           <LogIn className="mx-auto h-12 w-12 text-primary mb-4" />
           <CardTitle className="text-3xl font-headline">Welcome Back!</CardTitle>
-          <CardDescription>Log in to access your FitPlan dashboard.</CardDescription>
+          <CardDescription>Log in to access your FitDeed dashboard.</CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>

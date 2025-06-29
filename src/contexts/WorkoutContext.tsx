@@ -3,9 +3,7 @@
 
 import type { WorkoutPlan, Category } from '@/types';
 import React, { createContext, useState, useEffect, ReactNode } from 'react';
-import { db } from '@/lib/firebase';
-import { collection, getDocs, addDoc, doc, getDoc, setDoc } from 'firebase/firestore';
-import { useAuth } from '@/hooks/useAuth'; // Import useAuth
+import { mockWorkoutPlans, mockCategories } from '@/lib/mock-data';
 
 interface WorkoutContextType {
   workoutPlans: WorkoutPlan[];
@@ -20,98 +18,53 @@ interface WorkoutContextType {
 
 export const WorkoutContext = createContext<WorkoutContextType | undefined>(undefined);
 
+// Helper to get initial favorites from localStorage
+const getInitialFavorites = (): string[] => {
+  if (typeof window === 'undefined') {
+    return [];
+  }
+  const storedFavorites = localStorage.getItem('fitplanFavoritePlanIds');
+  return storedFavorites ? JSON.parse(storedFavorites) : [];
+};
+
 export const WorkoutProvider = ({ children }: { children: ReactNode }) => {
-  const [workoutPlans, setWorkoutPlans] = useState<WorkoutPlan[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [workoutPlans, setWorkoutPlans] = useState<WorkoutPlan[]>(mockWorkoutPlans);
+  const [categories, setCategories] = useState<Category[]>(mockCategories);
   const [favoritePlanIds, setFavoritePlanIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
-  const { user } = useAuth(); // Get the current authenticated user
 
+  // Set initial state after mount to avoid hydration issues
   useEffect(() => {
-    const fetchAllData = async () => {
-      setLoading(true);
-      try {
-        // Fetch Categories
-        const categoriesCollection = collection(db, 'categories');
-        const categorySnapshot = await getDocs(categoriesCollection);
-        const categoriesList = categorySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Category));
-        setCategories(categoriesList);
+    setFavoritePlanIds(getInitialFavorites());
+    setLoading(false);
+  }, []);
 
-        // Fetch Workout Plans
-        const workoutPlansCollection = collection(db, 'workoutPlans');
-        const workoutPlanSnapshot = await getDocs(workoutPlansCollection);
-        const workoutPlansList = workoutPlanSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as WorkoutPlan));
-        setWorkoutPlans(workoutPlansList);
-
-        // Fetch Favorites only if a user is logged in
-        if (user && user.uid) {
-          const favoritesDocRef = doc(db, 'favorites', user.uid);
-          const favoritesDocSnap = await getDoc(favoritesDocRef);
-
-          if (favoritesDocSnap.exists()) {
-            setFavoritePlanIds(favoritesDocSnap.data()?.planIds || []);
-          } else {
-            setFavoritePlanIds([]);
-          }
-        } else {
-          setFavoritePlanIds([]); // Clear favorites if no user
-        }
-      } catch (error) {
-        console.error("Error fetching data from Firestore:", error);
-        // Reset state on error
-        setCategories([]);
-        setWorkoutPlans([]);
-        setFavoritePlanIds([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchAllData();
-  }, [user]); // Re-run effect when user changes (login/logout)
-
+  // Sync favorites with localStorage whenever they change
+  useEffect(() => {
+    // Only run on client after initial state is set
+    if (!loading) {
+      localStorage.setItem('fitplanFavoritePlanIds', JSON.stringify(favoritePlanIds));
+    }
+  }, [favoritePlanIds, loading]);
 
   const addWorkoutPlan = async (planData: Omit<WorkoutPlan, 'id' | 'imageUrl'>) => {
-    try {
-      const newPlanData = {
-        ...planData,
-        imageUrl: `https://placehold.co/600x400.png?text=${encodeURIComponent(planData.name)}`,
-      };
-      const docRef = await addDoc(collection(db, "workoutPlans"), newPlanData);
-      const newPlan = { ...newPlanData, id: docRef.id } as WorkoutPlan;
-      setWorkoutPlans(prevPlans => [newPlan, ...prevPlans]);
-      // Optionally show a success toast
-    } catch (error) {
-        console.error("Error adding workout plan: ", error);
-        // Here you might want to show a toast to the user
-    }
+    const newPlan: WorkoutPlan = {
+      ...planData,
+      id: `plan${Date.now()}`,
+      imageUrl: `https://placehold.co/600x400.png?text=${encodeURIComponent(planData.name)}`,
+    };
+    setWorkoutPlans(prevPlans => [newPlan, ...prevPlans]);
   };
 
-  const toggleFavorite = async (planId: string) => {
-    if (!user || !user.uid) {
-      // Handle case where user is not logged in (e.g., show a prompt to log in)
-      console.log("Please log in to favorite plans.");
-      // Optionally show a toast or redirect to login
-      return;
-    }
-
-    const isFavorited = favoritePlanIds.includes(planId);
-    const updatedFavorites = isFavorited
-      ? favoritePlanIds.filter(id => id !== planId)
-      : [...favoritePlanIds, planId];
-
-    setFavoritePlanIds(updatedFavorites); // Optimistic update
-
-    try {
-      const favoritesDocRef = doc(db, 'favorites', user.uid);
-      await setDoc(favoritesDocRef, { planIds: updatedFavorites }, { merge: true }); // Use merge: true to not overwrite other fields if they exist
-    } catch (error) {
-      console.error("Error updating favorites in Firestore:", error);
-      // Revert the optimistic update by performing the opposite action
-      setFavoritePlanIds(prevIds =>
-        isFavorited ? [...prevIds, planId] : prevIds.filter(id => id !== planId)
-      );
-    }
+  const toggleFavorite = (planId: string) => {
+    setFavoritePlanIds(prevIds => {
+      const isFavorited = prevIds.includes(planId);
+      if (isFavorited) {
+        return prevIds.filter(id => id !== planId);
+      } else {
+        return [...prevIds, planId];
+      }
+    });
   };
 
   const getWorkoutById = (id: string) => {

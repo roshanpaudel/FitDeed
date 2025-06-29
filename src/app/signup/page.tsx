@@ -1,3 +1,4 @@
+
 'use client';
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -52,7 +53,7 @@ export default function SignupPage() {
     login(data.email, data.name);
     toast({
       title: "Account Created!",
-      description: "Welcome to FitPlan! You are now logged in.",
+      description: "Welcome to FitDeed! You are now logged in.",
     });
     router.push('/'); // Redirect to homepage after signup
   }
@@ -63,7 +64,7 @@ export default function SignupPage() {
         <CardHeader className="text-center">
           <UserPlus className="mx-auto h-12 w-12 text-primary mb-4" />
           <CardTitle className="text-3xl font-headline">Create Your Account</CardTitle>
-          <CardDescription>Join FitPlan and start your fitness journey today!</CardDescription>
+          <CardDescription>Join FitDeed and start your fitness journey today!</CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>

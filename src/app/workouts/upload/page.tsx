@@ -29,7 +29,7 @@ const workoutFormSchema = z.object({
   name: z.string().min(3, "Name must be at least 3 characters.").max(100),
   description: z.string().min(10, "Description must be at least 10 characters.").max(500),
   category: z.string().min(1, "Please select a category."),
-  instructions: z.string().min(10, "Instructions must be provided.").transform(val => val.split('\n').map(s => s.trim()).filter(s => s.length > 0)),
+  instructions: z.string().min(10, "Instructions must be provided."),
   mediaUrl: z.string().url("Must be a valid URL (e.g., for a video or GIF).").optional().or(z.literal('')),
   duration: z.string().optional(),
   difficulty: z.enum(['Beginner', 'Intermediate', 'Advanced']).optional(),
@@ -41,7 +41,7 @@ const dietPlanFormSchema = z.object({
   name: z.string().min(3, "Name must be at least 3 characters.").max(100),
   description: z.string().min(10, "Description must be at least 10 characters.").max(500),
   category: z.string().min(1, "Please select a diet category."),
-  instructions: z.string().min(10, "Meal plan details must be provided.").transform(val => val.split('\n').map(s => s.trim()).filter(s => s.length > 0)),
+  instructions: z.string().min(10, "Meal plan details must be provided."),
   caloriesPerDay: z.string().optional(),
   protein: z.string().optional(),
   carbs: z.string().optional(),
@@ -86,7 +86,7 @@ function UploadPlanPageContent() {
   async function onWorkoutSubmit(data: WorkoutFormValues) {
     await addWorkoutPlan({
       ...data,
-      instructions: data.instructions, // Already transformed by Zod
+      instructions: data.instructions.split('\n').map(s => s.trim()).filter(s => s.length > 0),
     });
     toast({
       title: "Workout Uploaded!",
@@ -99,7 +99,7 @@ function UploadPlanPageContent() {
   async function onDietPlanSubmit(data: DietPlanFormValues) {
     await addDietPlan({
         ...data,
-        instructions: data.instructions, // Already transformed by Zod
+        instructions: data.instructions.split('\n').map(s => s.trim()).filter(s => s.length > 0),
     });
     toast({
       title: "Diet Uploaded!",

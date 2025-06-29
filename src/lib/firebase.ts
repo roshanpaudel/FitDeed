@@ -4,22 +4,36 @@ import { getAuth } from "firebase/auth";
 import { getAnalytics } from "firebase/analytics";
 import { getFirestore } from "firebase/firestore";
 
-// Web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+// Web app's Firebase configuration from environment variables
 const firebaseConfig = {
-  apiKey: "AIzaSyBAs5P8oHlpQLUqbHgTIQCHYoe7M-Hhx3o",
-  authDomain: "fitdeed-1f2e2.firebaseapp.com",
-  projectId: "fitdeed-1f2e2",
-  storageBucket: "fitdeed-1f2e2.firebasestorage.app",
-  messagingSenderId: "513223523311",
-  appId: "1:513223523311:web:c845ef859677059a88541a",
-  measurementId: "G-TBBK27DHX5"
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
 };
-// Initialize Firebase
-const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-let analytics;
-if (typeof window !== 'undefined') {
-  analytics = getAnalytics(app);
+
+// A check to ensure Firebase environment variables are set.
+if (!firebaseConfig.apiKey) {
+    throw new Error("Firebase config is not set. Please create a .env.local file with your Firebase project credentials.");
 }
 
-const db = getFirestore(app);const auth = getAuth(app);export { app, db, auth, analytics };
+
+// Initialize Firebase
+const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+let analytics;
+// Initialize Analytics only on the client side
+if (typeof window !== 'undefined') {
+  try {
+    analytics = getAnalytics(app);
+  } catch (error) {
+    console.error("Firebase Analytics initialization error", error);
+  }
+}
+
+export { app, db, auth, analytics };
