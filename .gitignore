@@ -1,0 +1,27 @@
+# Ignores
+
+# Firebase Admin SDK key
+/config/fitdeed-1f2e2-firebase-adminsdk-fbsvc-c776031ef7.json
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Dependency directories
+/node_modules/
+
+#others
+/.next/
+/.idx/
+/config/
+/config/fitdeed-1f2e2-firebase-adminsdk-fbsvc-c776031ef7.json
+/docs/
+/.vscode/
+
+#files
+firestore-data.json
+apphosting.yaml
+importData.js
