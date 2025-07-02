@@ -23,7 +23,7 @@ const getInitialFavorites = (): string[] => {
   if (typeof window === 'undefined') {
     return [];
   }
-  const storedFavorites = localStorage.getItem('fitplanFavoritePlanIds');
+  const storedFavorites = localStorage.getItem('fitdeedFavoriteWorkoutPlanIds');
   return storedFavorites ? JSON.parse(storedFavorites) : [];
 };
 
@@ -43,7 +43,7 @@ export const WorkoutProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     // Only run on client after initial state is set
     if (!loading) {
-      localStorage.setItem('fitplanFavoritePlanIds', JSON.stringify(favoritePlanIds));
+      localStorage.setItem('fitdeedFavoriteWorkoutPlanIds', JSON.stringify(favoritePlanIds));
     }
   }, [favoritePlanIds, loading]);
 

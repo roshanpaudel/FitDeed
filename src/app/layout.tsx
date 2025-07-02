@@ -1,3 +1,4 @@
+
 import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
@@ -5,6 +6,7 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { WorkoutProvider } from '@/contexts/WorkoutContext';
+import { DietPlanProvider } from '@/contexts/DietPlanContext';
 
 export const metadata: Metadata = {
   title: 'FitDeed - Your Personal Workout Planner',
@@ -26,12 +28,14 @@ export default function RootLayout({
       <body className="font-body antialiased flex flex-col min-h-screen">
         <AuthProvider>
           <WorkoutProvider>
-            <Header />
-            <main className="flex-grow container mx-auto px-4 py-8">
-              {children}
-            </main>
-            <Footer />
-            <Toaster />
+            <DietPlanProvider>
+              <Header />
+              <main className="flex-grow container mx-auto px-4 py-8">
+                {children}
+              </main>
+              <Footer />
+              <Toaster />
+            </DietPlanProvider>
           </WorkoutProvider>
         </AuthProvider>
       </body>
