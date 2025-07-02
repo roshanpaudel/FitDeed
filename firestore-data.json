@@ -1,0 +1,108 @@
+{
+  "workoutPlans": [
+    {
+      "name": "Quick Cardio Blast",
+      "description": "A short and effective cardio workout.",
+      "category": "cardio",
+      "instructions": [
+        "Perform Jumping Jacks for 30 seconds.",
+        "Rest for 15 seconds.",
+        "Perform High Knees for 30 seconds.",
+        "Rest for 15 seconds.",
+        "Repeat this cycle 3 times."
+      ],
+      "mediaUrl": "https://example.com/quick-cardio.gif",
+      "imageUrl": "https://placehold.co/600x400.png",
+      "duration": "15 minutes",
+      "difficulty": "Beginner",
+      "id": "quick_cardio_blast_id"
+    },
+    {
+      "name": "Full Body Strength",
+      "description": "Build muscle with this full body routine.",
+      "category": "strength",
+      "instructions": [
+        "Warm-up for 5 minutes.",
+        "Perform 3 sets of 10 squats.",
+        "Perform 3 sets of 10 push-ups.",
+        "Perform 3 sets of 10 lunges (each leg).",
+        "Perform 3 sets of 10 plank rows (each arm).",
+        "Cool-down for 5 minutes."
+      ],
+      "imageUrl": "https://placehold.co/600x400.png",
+      "duration": "45 minutes",
+      "difficulty": "Intermediate",
+      "id": "full_body_strength_id"
+    }
+  ],
+  "dietPlans": [
+    {
+      "name": "Basic Healthy Eating",
+      "description": "A simple plan for balanced meals.",
+      "category": "healthy eating",
+      "instructions": [
+        "Breakfast: Oatmeal with berries and nuts.",
+        "Lunch: Grilled chicken salad.",
+        "Dinner: Baked fish with roasted vegetables.",
+        "Snacks: Fruit, yogurt, or a handful of almonds."
+      ],
+      "caloriesPerDay": "1800-2000 kcal",
+      "protein": "70-90g",
+      "carbs": "200-240g",
+      "fat": "60-70g",
+      "imageUrl": "https://placehold.co/600x400.png",
+      "id": "basic_healthy_eating_id"
+    },
+    {
+      "name": "High Protein Diet",
+      "description": "Focus on protein intake for muscle growth.",
+      "category": "muscle gain",
+      "instructions": [
+        "Breakfast: Scrambled eggs with spinach and whole wheat toast.",
+        "Lunch: Tuna salad with avocado on whole wheat bread.",
+        "Dinner: Lean steak with sweet potato and broccoli.",
+        "Snacks: Protein shake, Greek yogurt."
+      ],
+      "caloriesPerDay": "2200-2500 kcal",
+      "protein": "150-180g",
+      "carbs": "180-220g",
+      "fat": "80-90g",
+      "imageUrl": "https://placehold.co/600x400.png",
+      "id": "high_protein_diet_id"
+    }
+  ],
+  "categories": [
+    {
+      "name": "Strength Training",
+      "imageUrl": "https://placehold.co/400x300.png",
+      "description": "Build muscle and increase power.",
+      "id": "strength_training_id"
+    },
+    {
+      "name": "Cardiovascular",
+      "imageUrl": "https://placehold.co/400x300.png",
+      "description": "Improve heart health and endurance.",
+      "id": "cardiovascular_id"
+    },
+    {
+      "name": "Flexibility & Mobility",
+      "imageUrl": "https://placehold.co/400x300.png",
+      "description": "Enhance range of motion and prevent injuries.",
+      "id": "flexibility_mobility_id"
+    },
+    {
+      "name": "HIIT",
+      "imageUrl": "https://placehold.co/400x300.png",
+      "description": "High-Intensity Interval Training for efficient fat burning.",
+      "id": "hiit_id"
+    }
+  ],
+  "favorites": {
+    "dummy_user_uid_1": {
+      "workoutPlanIds": [
+        "quick_cardio_blast_id"
+      ],
+      "dietPlanIds": []
+    }
+  }
+}
