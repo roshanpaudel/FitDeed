@@ -15,7 +15,7 @@ import { z } from 'zod';
 const WorkoutPlanDataSchema = z.object({
   name: z.string().describe('A concise and catchy name for the workout plan.'),
   description: z.string().describe('A brief, one-to-two-sentence description of the workout plan.'),
-  category: z.string().describe('The most appropriate category for this workout. Choose from Strength Training, Cardiovascular, Flexibility & Mobility, or HIIT.'),
+  category: z.enum(['Strength Training', 'Cardiovascular', 'Flexibility & Mobility', 'HIIT']).describe('The most appropriate category for this workout.'),
   instructions: z.string().describe('The step-by-step instructions for the workout. Each step should be on a new line.'),
   duration: z.string().optional().describe('The estimated total time to complete the workout, e.g., "45 minutes".'),
   difficulty: z.enum(['Beginner', 'Intermediate', 'Advanced']).optional().describe('The difficulty level of the workout.'),
@@ -25,7 +25,7 @@ const WorkoutPlanDataSchema = z.object({
 const DietPlanDataSchema = z.object({
     name: z.string().describe('A concise and appealing name for the diet plan.'),
     description: z.string().describe('A brief, one-to-two-sentence description of the diet plan.'),
-    category: z.string().describe('The most appropriate category for this diet plan. Choose from Weight Loss, Muscle Gain, Balanced Diet, Vegan, or Ketogenic.'),
+    category: z.enum(['Weight Loss', 'Muscle Gain', 'Balanced Diet', 'Vegan', 'Ketogenic']).describe('The most appropriate category for this diet plan.'),
     instructions: z.string().describe('Detailed meal plan or instructions. Each meal or instruction should be on a new line.'),
     caloriesPerDay: z.string().optional().describe('The estimated total daily calorie intake, e.g., "2200 kcal".'),
     protein: z.string().optional().describe('The target daily protein intake, e.g., "150g" or "30%".'),
