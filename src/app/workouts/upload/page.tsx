@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -124,17 +123,18 @@ function UploadPlanPageContent() {
     try {
         const input: GeneratePlanInput = {
             prompt: aiPrompt,
-            planType: activeTab as 'workout' | 'diet',
         };
         const result: GeneratePlanOutput = await generatePlan(input);
         
-        if (activeTab === 'workout' && result.workout) {
+        if (result.planType === 'workout' && result.workout) {
+            setActiveTab('workout');
             workoutForm.reset({
                 ...result.workout,
                 instructions: Array.isArray(result.workout.instructions) ? result.workout.instructions.join('\n') : result.workout.instructions,
             });
             toast({ title: "Workout Plan Generated!", description: "The workout form has been populated by AI." });
-        } else if (activeTab === 'diet' && result.diet) {
+        } else if (result.planType === 'diet' && result.diet) {
+            setActiveTab('diet');
             dietForm.reset({
                 ...result.diet,
                 instructions: Array.isArray(result.diet.instructions) ? result.diet.instructions.join('\n') : result.diet.instructions,
@@ -183,7 +183,7 @@ function UploadPlanPageContent() {
                 </Button>
             </div>
              <p className="text-sm text-muted-foreground">
-                Describe the {activeTab} you want to create and let AI fill out the form for you.
+                Describe the plan you want to create and let AI fill out the form for you.
             </p>
           </div>
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -253,9 +253,6 @@ function UploadPlanPageContent() {
                         <FormControl>
                           <Textarea placeholder="Enter each step on a new line." {...field} rows={6} />
                         </FormControl>
-                        <FormDescription>
-                          Each line will be treated as a separate instruction.
-                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -269,7 +266,6 @@ function UploadPlanPageContent() {
                         <FormControl>
                           <Input placeholder="https://example.com/workout.mp4" {...field} />
                         </FormControl>
-                        <FormDescription>Link to a video or GIF for this workout.</FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -379,9 +375,6 @@ function UploadPlanPageContent() {
                         <FormControl>
                           <Textarea placeholder="Enter meal details, recipes, or guidelines. Each line can be a new meal or instruction." {...field} rows={6} />
                         </FormControl>
-                         <FormDescription>
-                          Each line will be treated as a separate part of the diet.
-                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}

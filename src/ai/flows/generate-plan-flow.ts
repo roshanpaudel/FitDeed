@@ -36,13 +36,13 @@ const DietPlanDataSchema = z.object({
 
 const GeneratePlanInputSchema = z.object({
   prompt: z.string().describe('The user\'s request for a workout or diet plan.'),
-  planType: z.enum(['workout', 'diet']).describe('The type of plan to generate.'),
 });
 export type GeneratePlanInput = z.infer<typeof GeneratePlanInputSchema>;
 
 const GeneratePlanOutputSchema = z.object({
-  workout: WorkoutPlanDataSchema.optional().describe('The generated workout plan data. Provide this only if planType was "workout".'),
-  diet: DietPlanDataSchema.optional().describe('The generated diet plan data. Provide this only if planType was "diet".'),
+  planType: z.enum(['workout', 'diet']).describe('The type of plan generated based on the prompt.'),
+  workout: WorkoutPlanDataSchema.optional().describe('The generated workout plan data. Provide this only if planType is "workout".'),
+  diet: DietPlanDataSchema.optional().describe('The generated diet plan data. Provide this only if planType is "diet".'),
 });
 export type GeneratePlanOutput = z.infer<typeof GeneratePlanOutputSchema>;
 
@@ -56,13 +56,18 @@ const generatePlanPrompt = ai.definePrompt({
     name: 'generatePlanPrompt',
     input: { schema: GeneratePlanInputSchema },
     output: { schema: GeneratePlanOutputSchema },
-    prompt: `You are a world-class fitness and nutrition expert. Your task is to generate a detailed plan based on the user's prompt.
+    prompt: `You are a world-class fitness and nutrition expert. Your task is to analyze a user's prompt and generate a detailed plan.
 
-The user wants to create a {{planType}} plan.
+First, determine if the user is asking for a "workout" plan or a "diet" plan. Set the 'planType' field in your response accordingly.
 
 User's request: "{{prompt}}"
 
-Based on the request, generate a complete and well-structured {{planType}} plan. Fill in all the relevant fields in the output format. Ensure the instructions are clear, concise, and formatted with each step on a new line. The category must be one of the provided options.
+Based on the request and the determined planType, generate a complete and well-structured plan.
+- If it's a workout plan, fill in the 'workout' object.
+- If it's a diet plan, fill in the 'diet' object.
+
+Fill in all the relevant fields in the output format. Ensure the instructions are clear, concise, and formatted with each step on a new line. The category must be one of the provided options.
+If the prompt is ambiguous or doesn't seem to be about a workout or diet, you can default to generating a workout plan.
 `,
 });
 
