@@ -25,6 +25,7 @@ import ProtectedPage from "@/components/ProtectedPage";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { UploadCloud, Utensils, Zap, Wand2, Loader2 } from "lucide-react";
 import { generatePlan, type GeneratePlanInput } from '@/ai/flows/generate-plan-flow';
+import { Label } from '@/components/ui/label';
 
 
 const workoutFormSchema = z.object({
@@ -128,10 +129,16 @@ function UploadPlanPageContent() {
         const result = await generatePlan(input);
         
         if (activeTab === 'workout' && result.workout) {
-            workoutForm.reset(result.workout);
+            workoutForm.reset({
+                ...result.workout,
+                instructions: Array.isArray(result.workout.instructions) ? result.workout.instructions.join('\n') : result.workout.instructions,
+            });
             toast({ title: "Workout Plan Generated!", description: "The workout form has been populated by AI." });
         } else if (activeTab === 'diet' && result.diet) {
-            dietForm.reset(result.diet);
+            dietForm.reset({
+                ...result.diet,
+                instructions: Array.isArray(result.diet.instructions) ? result.diet.instructions.join('\n') : result.diet.instructions,
+            });
             toast({ title: "Diet Plan Generated!", description: "The diet form has been populated by AI." });
         } else {
              toast({ title: "Generation Error", description: "The AI couldn't generate the requested plan. Please try a different prompt.", variant: "destructive" });
@@ -159,10 +166,10 @@ function UploadPlanPageContent() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4 mb-6">
-            <FormLabel htmlFor="ai-prompt" className="font-semibold flex items-center gap-2 text-base">
+            <Label htmlFor="ai-prompt" className="font-semibold flex items-center gap-2 text-base">
                 <Wand2 className="h-5 w-5 text-primary"/>
                 Generate with AI
-            </FormLabel>
+            </Label>
             <div className="flex gap-2">
                 <Input 
                     id="ai-prompt"
