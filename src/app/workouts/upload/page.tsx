@@ -24,7 +24,7 @@ import { useToast } from "@/hooks/use-toast";
 import ProtectedPage from "@/components/ProtectedPage";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { UploadCloud, Utensils, Zap, Wand2, Loader2 } from "lucide-react";
-import { generatePlan, type GeneratePlanInput } from '@/ai/flows/generate-plan-flow';
+import { generatePlan, type GeneratePlanInput, type GeneratePlanOutput } from '@/ai/flows/generate-plan-flow';
 import { Label } from '@/components/ui/label';
 
 
@@ -126,7 +126,7 @@ function UploadPlanPageContent() {
             prompt: aiPrompt,
             planType: activeTab as 'workout' | 'diet',
         };
-        const result = await generatePlan(input);
+        const result: GeneratePlanOutput = await generatePlan(input);
         
         if (activeTab === 'workout' && result.workout) {
             workoutForm.reset({
@@ -182,9 +182,9 @@ function UploadPlanPageContent() {
                     {isGenerating ? <Loader2 className="animate-spin" /> : "Generate"}
                 </Button>
             </div>
-             <FormDescription>
+             <p className="text-sm text-muted-foreground">
                 Describe the {activeTab} you want to create and let AI fill out the form for you.
-            </FormDescription>
+            </p>
           </div>
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-6">
