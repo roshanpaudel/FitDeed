@@ -19,11 +19,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useWorkouts } from "@/hooks/useWorkouts";
-import { useDietPlans } from "@/hooks/useDietPlans"; // New hook for diet plans
+import { useDietPlans } from "@/hooks/useDietPlans";
 import { useToast } from "@/hooks/use-toast";
 import ProtectedPage from "@/components/ProtectedPage";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { UploadCloud, Utensils, Zap } from "lucide-react"; // Added Utensils for diet
+import { UploadCloud, Utensils, Zap, Wand2, Loader2 } from "lucide-react";
+import { generatePlan, type GeneratePlanInput } from '@/ai/flows/generate-plan-flow';
+
 
 const workoutFormSchema = z.object({
   name: z.string().min(3, "Name must be at least 3 characters.").max(100),
@@ -55,6 +57,9 @@ function UploadPlanPageContent() {
   const { categories: dietCategories, addDietPlan, loading: dietLoading } = useDietPlans();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("workout");
+  const [aiPrompt, setAiPrompt] = useState("");
+  const [isGenerating, setIsGenerating] = useState(false);
+
 
   const workoutForm = useForm<WorkoutFormValues>({
     resolver: zodResolver(workoutFormSchema),
@@ -90,7 +95,7 @@ function UploadPlanPageContent() {
     });
     toast({
       title: "Workout Uploaded!",
-      description: `${data.name} has been added to your database.`,
+      description: `${data.name} has been added to the database.`,
       variant: "default",
     });
     workoutForm.reset();
@@ -103,11 +108,42 @@ function UploadPlanPageContent() {
     });
     toast({
       title: "Diet Uploaded!",
-      description: `${data.name} has been added to your database.`,
+      description: `${data.name} has been added to the database.`,
       variant: "default",
     });
     dietForm.reset();
   }
+
+  const handleGeneratePlan = async () => {
+    if (!aiPrompt.trim()) {
+        toast({ title: "Prompt is empty", description: "Please enter a description of the plan you want to create.", variant: "destructive" });
+        return;
+    }
+    setIsGenerating(true);
+    try {
+        const input: GeneratePlanInput = {
+            prompt: aiPrompt,
+            planType: activeTab as 'workout' | 'diet',
+        };
+        const result = await generatePlan(input);
+        
+        if (activeTab === 'workout' && result.workout) {
+            workoutForm.reset(result.workout);
+            toast({ title: "Workout Plan Generated!", description: "The workout form has been populated by AI." });
+        } else if (activeTab === 'diet' && result.diet) {
+            dietForm.reset(result.diet);
+            toast({ title: "Diet Plan Generated!", description: "The diet form has been populated by AI." });
+        } else {
+             toast({ title: "Generation Error", description: "The AI couldn't generate the requested plan. Please try a different prompt.", variant: "destructive" });
+        }
+
+    } catch (error) {
+        console.error("AI generation failed:", error);
+        toast({ title: "AI Error", description: "Something went wrong while generating the plan. Please try again.", variant: "destructive" });
+    } finally {
+        setIsGenerating(false);
+    }
+  };
 
   return (
     <div className="max-w-2xl mx-auto py-8 animate-fadeIn">
@@ -117,13 +153,36 @@ function UploadPlanPageContent() {
             {activeTab === "workout" ? <Zap className="h-8 w-8 text-primary" /> : <Utensils className="h-8 w-8 text-primary" />}
             <CardTitle className="text-3xl font-headline">{activeTab === 'workout' ? 'Upload New Workout' : 'Upload New Diet'}</CardTitle>
           </div>
-          <CardDescription>Share your favorite {activeTab === "workout" ? "workouts" : "diets"} with the FitDeed community.</CardDescription>
+          <CardDescription>
+            Fill in the details manually or use our AI assistant to generate a plan from a prompt.
+          </CardDescription>
         </CardHeader>
         <CardContent>
+          <div className="space-y-4 mb-6">
+            <FormLabel htmlFor="ai-prompt" className="font-semibold flex items-center gap-2 text-base">
+                <Wand2 className="h-5 w-5 text-primary"/>
+                Generate with AI
+            </FormLabel>
+            <div className="flex gap-2">
+                <Input 
+                    id="ai-prompt"
+                    placeholder={`e.g., a 30 minute beginner HIIT workout`}
+                    value={aiPrompt}
+                    onChange={(e) => setAiPrompt(e.target.value)}
+                    disabled={isGenerating}
+                />
+                <Button onClick={handleGeneratePlan} disabled={isGenerating}>
+                    {isGenerating ? <Loader2 className="animate-spin" /> : "Generate"}
+                </Button>
+            </div>
+             <FormDescription>
+                Describe the {activeTab} you want to create and let AI fill out the form for you.
+            </FormDescription>
+          </div>
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-6">
-              <TabsTrigger value="workout">Workout</TabsTrigger>
-              <TabsTrigger value="diet">Diet</TabsTrigger>
+              <TabsTrigger value="workout" disabled={isGenerating}>Workout</TabsTrigger>
+              <TabsTrigger value="diet" disabled={isGenerating}>Diet</TabsTrigger>
             </TabsList>
             <TabsContent value="workout">
               <Form {...workoutForm}>
@@ -160,7 +219,7 @@ function UploadPlanPageContent() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Category</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value}>
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Select a category" />
@@ -228,7 +287,7 @@ function UploadPlanPageContent() {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Difficulty (Optional)</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value}>
                             <FormControl>
                               <SelectTrigger>
                                 <SelectValue placeholder="Select difficulty" />
@@ -245,7 +304,7 @@ function UploadPlanPageContent() {
                       )}
                     />
                   </div>
-                  <Button type="submit" className="w-full" size="lg" disabled={workoutLoading}>
+                  <Button type="submit" className="w-full" size="lg" disabled={workoutLoading || isGenerating}>
                     <UploadCloud className="mr-2 h-5 w-5" /> {workoutLoading ? 'Uploading...' : 'Upload Workout'}
                   </Button>
                 </form>
@@ -286,7 +345,7 @@ function UploadPlanPageContent() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Diet Category</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value}>
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Select a diet category" />
@@ -376,7 +435,7 @@ function UploadPlanPageContent() {
                         )}
                       />
                   </div>
-                  <Button type="submit" className="w-full" size="lg" disabled={dietLoading}>
+                  <Button type="submit" className="w-full" size="lg" disabled={dietLoading || isGenerating}>
                     <UploadCloud className="mr-2 h-5 w-5" /> {dietLoading ? 'Uploading...' : 'Upload Diet'}
                   </Button>
                 </form>
