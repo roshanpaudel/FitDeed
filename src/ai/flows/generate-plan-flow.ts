@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview An AI flow to generate workout or diet plans based on a user prompt.
@@ -33,13 +34,13 @@ const DietPlanDataSchema = z.object({
 });
 
 
-export const GeneratePlanInputSchema = z.object({
+const GeneratePlanInputSchema = z.object({
   prompt: z.string().describe('The user\'s request for a workout or diet plan.'),
   planType: z.enum(['workout', 'diet']).describe('The type of plan to generate.'),
 });
 export type GeneratePlanInput = z.infer<typeof GeneratePlanInputSchema>;
 
-export const GeneratePlanOutputSchema = z.object({
+const GeneratePlanOutputSchema = z.object({
   workout: WorkoutPlanDataSchema.optional().describe('The generated workout plan data. Provide this only if planType was "workout".'),
   diet: DietPlanDataSchema.optional().describe('The generated diet plan data. Provide this only if planType was "diet".'),
 });
