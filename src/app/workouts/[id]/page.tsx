@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { useParams, useRouter } from 'next/navigation';
 import { useWorkouts } from '@/hooks/useWorkouts';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, CheckCircle, Clock, BarChartBig, Tag, Heart, PlayCircle, Loader2, Trash2, Wand2 } from 'lucide-react';
 import type { WorkoutPlan } from '@/types';
@@ -25,6 +25,8 @@ import {
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { generateWorkoutFromPrompt, type GenerateWorkoutFromPromptInput, type GenerateWorkoutFromPromptOutput } from '@/ai/flows/generate-suggestions-flow';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 
 
 export default function WorkoutDetailPage() {
@@ -34,9 +36,11 @@ export default function WorkoutDetailPage() {
   const [plan, setPlan] = useState<WorkoutPlan | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // New state for AI update
+  // State for AI updates
   const [updatePrompt, setUpdatePrompt] = useState('');
   const [isUpdating, setIsUpdating] = useState(false);
+  const [suggestedUpdate, setSuggestedUpdate] = useState<GenerateWorkoutFromPromptOutput | null>(null);
+  const [selectedExerciseIndices, setSelectedExerciseIndices] = useState<number[]>([]);
   const { toast } = useToast();
 
   const id = typeof params.id === 'string' ? params.id : '';
@@ -62,6 +66,7 @@ export default function WorkoutDetailPage() {
     if (!plan || !updatePrompt.trim()) return;
 
     setIsUpdating(true);
+    setSuggestedUpdate(null);
 
     try {
       // Convert current plan instructions to AI-friendly format
@@ -92,23 +97,13 @@ export default function WorkoutDetailPage() {
 
       const output: GenerateWorkoutFromPromptOutput = await generateWorkoutFromPrompt(input);
       
-      const updatedPlanData = {
-        name: output.planName,
-        description: output.planDescription,
-        category: output.category,
-        difficulty: output.difficulty,
-        duration: output.duration,
-        instructions: output.exercises.map(ex => `${ex.name}: ${ex.details}`),
-      };
+      setSuggestedUpdate(output);
+      if (output.exercises) {
+        setSelectedExerciseIndices(output.exercises.map((_, index) => index));
+      }
 
-      // Call context function to update the plan
-      updateWorkoutPlan(plan.id, updatedPlanData);
-      const updatedPlan = getWorkoutById(plan.id);
-      setPlan(updatedPlan || null);
-
-
-      toast({ title: 'Plan Updated!', description: 'Your workout plan has been modified by AI.' });
-      setUpdatePrompt(''); // Clear prompt
+      toast({ title: 'Suggestion Ready!', description: 'Review the updated plan below and save your changes.' });
+      setUpdatePrompt('');
     } catch (error) {
       console.error("AI update failed:", error);
       toast({ title: "AI Error", description: "Something went wrong while updating the plan. Please try again.", variant: "destructive" });
@@ -117,6 +112,41 @@ export default function WorkoutDetailPage() {
     }
   };
 
+  const handleExerciseSelectionChange = (index: number, isSelected: boolean) => {
+    if (isSelected) {
+        setSelectedExerciseIndices(prev => [...prev, index]);
+    } else {
+        setSelectedExerciseIndices(prev => prev.filter(i => i !== index));
+    }
+  };
+
+  const handleConfirmUpdate = () => {
+    if (!plan || !suggestedUpdate) return;
+
+    const selectedExercises = suggestedUpdate.exercises.filter((_, index) =>
+      selectedExerciseIndices.includes(index)
+    );
+
+    const updatedPlanData = {
+      name: suggestedUpdate.planName,
+      description: suggestedUpdate.planDescription,
+      category: suggestedUpdate.category,
+      difficulty: suggestedUpdate.difficulty,
+      duration: suggestedUpdate.duration,
+      instructions: selectedExercises.map(ex => `${ex.name}: ${ex.details}`),
+    };
+
+    updateWorkoutPlan(plan.id, updatedPlanData);
+    
+    toast({ title: 'Plan Saved!', description: 'Your workout plan has been successfully updated.' });
+    setSuggestedUpdate(null);
+    setSelectedExerciseIndices([]);
+  };
+
+  const handleCancelUpdate = () => {
+    setSuggestedUpdate(null);
+    setSelectedExerciseIndices([]);
+  };
 
   if (loading || workoutsLoading) {
     return (
@@ -219,34 +249,77 @@ export default function WorkoutDetailPage() {
             </div>
           )}
 
-          <div className="space-y-3">
-            <h3 className="text-2xl font-semibold font-headline">Instructions</h3>
-            <ul className="list-none space-y-3 pl-0">
-              {plan.instructions.map((step, index) => (
-                <li key={index} className="flex items-start gap-3 p-3 bg-muted/30 rounded-md">
-                  <CheckCircle className="h-5 w-5 text-primary mt-1 shrink-0" />
-                  <span className="text-foreground">{step}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-           <div className="space-y-4 pt-6 border-t">
-            <h3 className="text-2xl font-semibold font-headline flex items-center gap-2"><Wand2 className="h-6 w-6 text-primary" /> Update with AI</h3>
-            <p className="text-muted-foreground">
-              Need to make a change? Tell the AI what you want to modify, add, or remove. For example: "add a 10 minute warm up" or "replace push-ups with dumbbell press".
-            </p>
-            <div className="flex gap-2">
-              <Input
-                placeholder="e.g., make this a 30 minute workout"
-                value={updatePrompt}
-                onChange={(e) => setUpdatePrompt(e.target.value)}
-                disabled={isUpdating}
-                onKeyDown={(e) => e.key === 'Enter' && handleUpdate()}
-              />
-              <Button onClick={handleUpdate} disabled={isUpdating || !updatePrompt.trim()}>
-                {isUpdating ? <Loader2 className="animate-spin" /> : "Update"}
-              </Button>
+          {suggestedUpdate ? (
+             <div className="space-y-3">
+                <Card className="bg-muted/20 border-primary">
+                    <CardHeader>
+                        <CardTitle>Review Suggested Update</CardTitle>
+                        <CardDescription>Uncheck any exercises you want to exclude, then save your changes.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <h4 className="font-semibold text-lg">Exercises ({selectedExerciseIndices.length} selected)</h4>
+                        <ul className="space-y-3 max-h-60 overflow-y-auto pr-2">
+                            {suggestedUpdate.exercises.map((exercise, index) => (
+                                <li key={index} className="flex items-start gap-3 p-3 bg-background/50 rounded-md">
+                                    <Checkbox
+                                        id={`exercise-update-${index}`}
+                                        className="mt-1"
+                                        checked={selectedExerciseIndices.includes(index)}
+                                        onCheckedChange={(checked) => handleExerciseSelectionChange(index, checked as boolean)}
+                                        disabled={isUpdating}
+                                    />
+                                    <Label htmlFor={`exercise-update-${index}`} className="flex flex-col cursor-pointer w-full">
+                                        <span className="font-medium">{exercise.name}</span>
+                                        <span className="text-sm text-muted-foreground">{exercise.details}</span>
+                                    </Label>
+                                </li>
+                            ))}
+                        </ul>
+                    </CardContent>
+                </Card>
             </div>
+          ) : (
+            <div className="space-y-3">
+                <h3 className="text-2xl font-semibold font-headline">Instructions</h3>
+                <ul className="list-none space-y-3 pl-0">
+                {plan.instructions.map((step, index) => (
+                    <li key={index} className="flex items-start gap-3 p-3 bg-muted/30 rounded-md">
+                    <CheckCircle className="h-5 w-5 text-primary mt-1 shrink-0" />
+                    <span className="text-foreground">{step}</span>
+                    </li>
+                ))}
+                </ul>
+            </div>
+          )}
+
+           <div className="space-y-4 pt-6 border-t">
+            <h3 className="text-2xl font-semibold font-headline flex items-center gap-2"><Wand2 className="h-6 w-6 text-primary" /> Update Plan</h3>
+            {suggestedUpdate ? (
+                <div className="flex justify-end gap-2">
+                    <Button variant="outline" onClick={handleCancelUpdate} disabled={isUpdating}>Cancel</Button>
+                    <Button onClick={handleConfirmUpdate} disabled={isUpdating || selectedExerciseIndices.length === 0}>
+                        {isUpdating ? <Loader2 className="animate-spin" /> : `Save ${selectedExerciseIndices.length} Exercises`}
+                    </Button>
+                </div>
+            ) : (
+                <>
+                  <p className="text-muted-foreground">
+                    Need to make a change? Tell the AI what you want to modify, add, or remove. For example: "add a 10 minute warm up" or "replace push-ups with dumbbell press".
+                  </p>
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="e.g., make this a 30 minute workout"
+                      value={updatePrompt}
+                      onChange={(e) => setUpdatePrompt(e.target.value)}
+                      disabled={isUpdating}
+                      onKeyDown={(e) => e.key === 'Enter' && handleUpdate()}
+                    />
+                    <Button onClick={handleUpdate} disabled={isUpdating || !updatePrompt.trim()}>
+                      {isUpdating ? <Loader2 className="animate-spin" /> : "Update with AI"}
+                    </Button>
+                  </div>
+                </>
+            )}
           </div>
         </CardContent>
       </Card>
