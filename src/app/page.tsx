@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -80,7 +81,7 @@ function AiGenerationSection() {
         setSelectedIndices([]);
     };
     
-    const suggestions = results?.planType === 'workout' ? results.workouts : results.diets;
+    const suggestions = results && (results.planType === 'workout' ? results.workouts : results.diets);
 
     return (
         <section className="text-center py-12 md:py-20 bg-gradient-to-br from-primary/10 via-background to-background rounded-lg shadow-lg">
