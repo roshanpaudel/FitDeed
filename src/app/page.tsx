@@ -6,25 +6,25 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useWorkouts } from '@/hooks/useWorkouts';
-import { ArrowRight, Zap, Wand2, Loader2 } from 'lucide-react';
+import { ArrowRight, Zap, Wand2, Loader2, ListPlus } from 'lucide-react';
 import type { Category } from '@/types';
 import { useState } from 'react';
 import { Input } from '@/components/ui/input';
-import { generateSuggestions, type GenerateSuggestionsInput, type GenerateSuggestionsOutput, type DietSuggestion, type WorkoutSuggestion } from '@/ai/flows/generate-suggestions-flow';
+import { generateWorkoutFromPrompt, type GenerateWorkoutFromPromptInput, type GenerateWorkoutFromPromptOutput } from '@/ai/flows/generate-suggestions-flow';
 import { useToast } from '@/hooks/use-toast';
-import SuggestionCard from '@/components/SuggestionCard';
-import { useDietPlans } from '@/hooks/useDietPlans';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
 
 // New component for the AI generation section
 function AiGenerationSection() {
     const { toast } = useToast();
     const { addWorkoutPlan } = useWorkouts();
-    const { addDietPlan } = useDietPlans();
 
     const [prompt, setPrompt] = useState('');
     const [isGenerating, setIsGenerating] = useState(false);
-    const [results, setResults] = useState<GenerateSuggestionsOutput | null>(null);
-    const [selectedIndices, setSelectedIndices] = useState<number[]>([]);
+    const [results, setResults] = useState<GenerateWorkoutFromPromptOutput | null>(null);
+    const [selectedExerciseIndices, setSelectedExerciseIndices] = useState<number[]>([]);
 
     const handleGenerate = async () => {
         if (!prompt.trim()) {
@@ -33,71 +33,69 @@ function AiGenerationSection() {
         }
         setIsGenerating(true);
         setResults(null);
-        setSelectedIndices([]);
+        setSelectedExerciseIndices([]);
         try {
-            const input: GenerateSuggestionsInput = { prompt };
-            const output = await generateSuggestions(input);
+            const input: GenerateWorkoutFromPromptInput = { prompt };
+            const output = await generateWorkoutFromPrompt(input);
             setResults(output);
+            // Auto-select all exercises by default
+            if (output?.exercises) {
+                setSelectedExerciseIndices(output.exercises.map((_, index) => index));
+            }
         } catch (error) {
             console.error("AI generation failed:", error);
-            toast({ title: "AI Error", description: "Something went wrong while generating suggestions. Please try again.", variant: "destructive" });
+            toast({ title: "AI Error", description: "Something went wrong while generating the workout. Please try again.", variant: "destructive" });
         } finally {
             setIsGenerating(false);
         }
     };
 
-    const handleSelectionChange = (index: number, isSelected: boolean) => {
+    const handleExerciseSelectionChange = (index: number, isSelected: boolean) => {
         if (isSelected) {
-            setSelectedIndices(prev => [...prev, index]);
+            setSelectedExerciseIndices(prev => [...prev, index]);
         } else {
-            setSelectedIndices(prev => prev.filter(i => i !== index));
+            setSelectedExerciseIndices(prev => prev.filter(i => i !== index));
         }
     };
     
-    const handleAddSelected = async () => {
-        if (!results || selectedIndices.length === 0) return;
+    const handleAddPlan = async () => {
+        if (!results || selectedExerciseIndices.length === 0) return;
 
-        toast({ title: "Adding Plans...", description: `Adding ${selectedIndices.length} selected plans to your library.` });
+        toast({ title: "Adding Plan...", description: `Adding ${results.planName} to your workout library.` });
         
-        let plansToAdd: (WorkoutSuggestion | DietSuggestion)[] = [];
-        if (results.planType === 'workout' && results.workouts) {
-            plansToAdd = selectedIndices.map(i => results.workouts![i]);
-        } else if (results.planType === 'diet' && results.diets) {
-            plansToAdd = selectedIndices.map(i => results.diets![i]);
-        }
+        const selectedExercises = results.exercises.filter((_, index) => selectedExerciseIndices.includes(index));
+        
+        const newPlan = {
+            name: results.planName,
+            description: results.planDescription,
+            category: results.category,
+            difficulty: results.difficulty,
+            duration: results.duration,
+            instructions: selectedExercises.map(ex => `${ex.name}: ${ex.details}`),
+        };
 
-        for (const plan of plansToAdd) {
-            // The AI returns instructions as a single string, we need to split it
-            const formattedInstructions = plan.instructions.split('\n').map(s => s.trim()).filter(s => s.length > 0);
-            
-            if (results.planType === 'workout') {
-                await addWorkoutPlan({ ...(plan as WorkoutSuggestion), instructions: formattedInstructions });
-            } else {
-                await addDietPlan({ ...(plan as DietSuggestion), instructions: formattedInstructions });
-            }
-        }
+        await addWorkoutPlan(newPlan);
 
-        toast({ title: "Success!", description: `${selectedIndices.length} plans have been added. Find them in 'Workouts' or 'Diets'.`, variant: "default"});
-        setSelectedIndices([]);
+        toast({ title: "Success!", description: `${results.planName} has been added. Find it in 'Workouts'.`, variant: "default"});
+        setResults(null);
+        setSelectedExerciseIndices([]);
     };
     
-    const suggestions = results && (results.planType === 'workout' ? results.workouts : results.diets);
-
     return (
         <section className="text-center py-12 md:py-20 bg-gradient-to-br from-primary/10 via-background to-background rounded-lg shadow-lg">
             <div className="container mx-auto px-4">
                 <Wand2 className="h-12 w-12 text-primary mx-auto mb-4" />
                 <h1 className="text-4xl md:text-5xl font-bold font-headline mb-6 text-primary animate-slideInUp">
-                    Generate Your Perfect Plan
+                    Generate Your Perfect Workout
                 </h1>
                 <p className="text-lg md:text-xl text-foreground mb-8 max-w-2xl mx-auto animate-slideInUp" style={{ animationDelay: '0.2s' }}>
-                    Describe your ideal workout or diet, and let our AI create personalized suggestions for you.
+                    Describe your ideal workout, and let our AI create a personalized plan for you to customize and save.
                 </p>
                 <div className="max-w-2xl mx-auto animate-slideInUp" style={{ animationDelay: '0.4s' }}>
                     <div className="flex gap-2">
                         <Input
                             id="ai-prompt-home"
-                            placeholder="e.g., a 3-day strength training split for beginners"
+                            placeholder="e.g., a 30-minute full body workout for beginners"
                             value={prompt}
                             onChange={(e) => setPrompt(e.target.value)}
                             disabled={isGenerating}
@@ -116,36 +114,50 @@ function AiGenerationSection() {
                     </div>
                 )}
                 
-                {suggestions && suggestions.length > 0 && (
-                    <div className="mt-12 text-left animate-fadeIn">
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {suggestions.map((plan, index) => (
-                                <SuggestionCard 
-                                    key={index}
-                                    id={`suggestion-${index}`}
-                                    plan={{ ...plan, planType: results!.planType }}
-                                    isSelected={selectedIndices.includes(index)}
-                                    onSelectionChange={(isSelected) => handleSelectionChange(index, isSelected)}
-                                />
-                            ))}
-                        </div>
-                        <div className="mt-8 text-center">
+                {results && !isGenerating && (
+                    <div className="mt-12 text-left animate-fadeIn max-w-2xl mx-auto">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="text-2xl">{results.planName}</CardTitle>
+                                <CardDescription>{results.planDescription}</CardDescription>
+                                <div className="flex flex-wrap gap-2 pt-2">
+                                    <Badge variant="secondary">{results.category}</Badge>
+                                    <Badge variant="outline">{results.difficulty}</Badge>
+                                    <Badge variant="outline">{results.duration}</Badge>
+                                </div>
+                            </CardHeader>
+                            <CardContent>
+                                <h3 className="font-semibold mb-3 text-lg">Exercises (select to include)</h3>
+                                <ul className="space-y-3">
+                                    {results.exercises.map((exercise, index) => (
+                                        <li key={index} className="flex items-start gap-3 p-3 bg-muted/50 rounded-md">
+                                            <Checkbox
+                                                id={`exercise-${index}`}
+                                                className="mt-1"
+                                                checked={selectedExerciseIndices.includes(index)}
+                                                onCheckedChange={(checked) => handleExerciseSelectionChange(index, checked as boolean)}
+                                            />
+                                            <Label htmlFor={`exercise-${index}`} className="flex flex-col cursor-pointer">
+                                                <span className="font-medium">{exercise.name}</span>
+                                                <span className="text-sm text-muted-foreground">{exercise.details}</span>
+                                            </Label>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </CardContent>
+                        </Card>
+                        <div className="mt-6 text-center">
                             <Button 
                                 size="lg" 
-                                onClick={handleAddSelected}
-                                disabled={selectedIndices.length === 0}
+                                onClick={handleAddPlan}
+                                disabled={selectedExerciseIndices.length === 0}
                             >
-                                Add {selectedIndices.length} Selected Plan{selectedIndices.length === 1 ? '' : 's'}
+                                <ListPlus className="mr-2" />
+                                Add Plan ({selectedExerciseIndices.length} exercises)
                             </Button>
                         </div>
                     </div>
                 )}
-
-                 {results && (!suggestions || suggestions.length === 0) && !isGenerating && (
-                    <div className="mt-12 text-center text-muted-foreground">
-                        <p>The AI could not generate suggestions for your prompt. Please try being more specific.</p>
-                    </div>
-                 )}
             </div>
         </section>
     );

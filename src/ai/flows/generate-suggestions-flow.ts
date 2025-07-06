@@ -1,89 +1,64 @@
 
 'use server';
 /**
- * @fileOverview An AI flow to generate multiple workout or diet plan suggestions based on a user prompt.
+ * @fileOverview An AI flow to generate a single workout plan with a list of exercises from a prompt.
  *
- * - generateSuggestions - A function that handles the suggestion generation process.
- * - GenerateSuggestionsInput - The input type for the generateSuggestions function.
- * - GenerateSuggestionsOutput - The return type for the generateSuggestions function.
+ * - generateWorkoutFromPrompt - A function that handles the workout generation process.
+ * - GenerateWorkoutFromPromptInput - The input type for the function.
+ * - GenerateWorkoutFromPromptOutput - The return type for the function.
  */
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 
-// Re-using schemas from the single plan generation flow.
-const WorkoutPlanDataSchema = z.object({
-  name: z.string().describe('A concise and catchy name for the workout plan.'),
-  description: z.string().describe('A brief, one-to-two-sentence description of the workout plan.'),
+const ExerciseSchema = z.object({
+  name: z.string().describe('The name of the exercise.'),
+  details: z.string().describe('The details of the exercise, such as reps, sets, or duration (e.g., "3 sets of 10-12 reps").'),
+});
+
+const GenerateWorkoutFromPromptInputSchema = z.object({
+  prompt: z.string().describe('The user\'s request for a workout plan.'),
+});
+export type GenerateWorkoutFromPromptInput = z.infer<typeof GenerateWorkoutFromPromptInputSchema>;
+
+const GenerateWorkoutFromPromptOutputSchema = z.object({
+  planName: z.string().describe('A concise and catchy name for the workout plan.'),
+  planDescription: z.string().describe('A brief, one-to-two-sentence description of the workout plan.'),
   category: z.enum(['Strength Training', 'Cardiovascular', 'Flexibility & Mobility', 'HIIT']).describe('The most appropriate category for this workout.'),
-  instructions: z.string().describe('The step-by-step instructions for the workout. Each step should be on a new line.'),
-  duration: z.string().optional().describe('The estimated total time to complete the workout, e.g., "45 minutes".'),
-  difficulty: z.enum(['Beginner', 'Intermediate', 'Advanced']).optional().describe('The difficulty level of the workout.'),
+  difficulty: z.enum(['Beginner', 'Intermediate', 'Advanced']).describe('The difficulty level of the workout.'),
+  duration: z.string().describe('The estimated total time to complete the workout, e.g., "45 minutes".'),
+  exercises: z.array(ExerciseSchema).describe('A list of individual exercises for the workout plan.'),
 });
-export type WorkoutSuggestion = z.infer<typeof WorkoutPlanDataSchema>;
+export type GenerateWorkoutFromPromptOutput = z.infer<typeof GenerateWorkoutFromPromptOutputSchema>;
 
-
-const DietPlanDataSchema = z.object({
-    name: z.string().describe('A concise and appealing name for the diet plan.'),
-    description: z.string().describe('A brief, one-to-two-sentence description of the diet plan.'),
-    category: z.enum(['Weight Loss', 'Muscle Gain', 'Balanced Diet', 'Vegan', 'Ketogenic']).describe('The most appropriate category for this diet plan.'),
-    instructions: z.string().describe('Detailed meal plan or instructions. Each meal or instruction should be on a new line.'),
-    caloriesPerDay: z.string().optional().describe('The estimated total daily calorie intake, e.g., "2200 kcal".'),
-    protein: z.string().optional().describe('The target daily protein intake, e.g., "150g" or "30%".'),
-    carbs: z.string().optional().describe('The target daily carbohydrate intake, e.g., "250g" or "40%".'),
-    fat: z.string().optional().describe('The target daily fat intake, e.g., "70g" or "30%".'),
-});
-export type DietSuggestion = z.infer<typeof DietPlanDataSchema>;
-
-
-const GenerateSuggestionsInputSchema = z.object({
-  prompt: z.string().describe('The user\'s request for workout or diet plan suggestions.'),
-});
-export type GenerateSuggestionsInput = z.infer<typeof GenerateSuggestionsInputSchema>;
-
-const GenerateSuggestionsOutputSchema = z.object({
-  planType: z.enum(['workout', 'diet']).describe('The type of plan generated based on the prompt.'),
-  workouts: z.array(WorkoutPlanDataSchema).optional().describe("An array of workout plan suggestions. Populate this only if planType is 'workout'"),
-  diets: z.array(DietPlanDataSchema).optional().describe("An array of diet plan suggestions. Populate this only if planType is 'diet'"),
-});
-export type GenerateSuggestionsOutput = z.infer<typeof GenerateSuggestionsOutputSchema>;
-
-
-export async function generateSuggestions(input: GenerateSuggestionsInput): Promise<GenerateSuggestionsOutput> {
-  return generateSuggestionsFlow(input);
+export async function generateWorkoutFromPrompt(input: GenerateWorkoutFromPromptInput): Promise<GenerateWorkoutFromPromptOutput> {
+  return generateWorkoutFromPromptFlow(input);
 }
 
-
-const generateSuggestionsPrompt = ai.definePrompt({
-    name: 'generateSuggestionsPrompt',
-    input: { schema: GenerateSuggestionsInputSchema },
-    output: { schema: GenerateSuggestionsOutputSchema },
-    prompt: `You are a world-class fitness and nutrition expert. Your task is to analyze a user's prompt and generate a list of 3 distinct plan suggestions.
-
-First, determine if the user is asking for "workout" plans or "diet" plans. Set the 'planType' field in your response accordingly.
+const generateWorkoutPrompt = ai.definePrompt({
+    name: 'generateWorkoutFromPrompt',
+    input: { schema: GenerateWorkoutFromPromptInputSchema },
+    output: { schema: GenerateWorkoutFromPromptOutputSchema },
+    prompt: `You are a world-class fitness expert. Your task is to analyze a user's prompt and generate a single, complete workout plan containing a list of exercises.
 
 User's request: "{{prompt}}"
 
-Based on the request, generate an array of 3 complete and well-structured plan suggestions.
-- If it's a workout request, populate the 'workouts' array.
-- If it's a diet request, populate the 'diets' array.
-- Do NOT populate both arrays. Only one should be used based on the planType.
+Based on the request, generate a workout plan with a name, a short description, an appropriate category, difficulty, duration, and a list of exercises with their details (sets, reps, time, etc.).
 
-Fill in all the relevant fields for each suggestion in the appropriate array. Ensure the instructions are clear and formatted with each step on a new line. The category for each must be one of the provided options. If the prompt is ambiguous, default to generating workout plan suggestions.
+Ensure you populate all fields in the output schema. If the user's prompt seems to be for a diet, you must still generate a workout. Create a workout plan named "Request appears to be for a diet" and explain in the description that you can currently only generate workout plans based on their request.
 `,
 });
 
-
-const generateSuggestionsFlow = ai.defineFlow(
+const generateWorkoutFromPromptFlow = ai.defineFlow(
   {
-    name: 'generateSuggestionsFlow',
-    inputSchema: GenerateSuggestionsInputSchema,
-    outputSchema: GenerateSuggestionsOutputSchema,
+    name: 'generateWorkoutFromPromptFlow',
+    inputSchema: GenerateWorkoutFromPromptInputSchema,
+    outputSchema: GenerateWorkoutFromPromptOutputSchema,
   },
   async (input) => {
-    const { output } = await generateSuggestionsPrompt(input);
+    const { output } = await generateWorkoutPrompt(input);
     if (!output) {
-        throw new Error("Failed to generate suggestions from the prompt.");
+        throw new Error("Failed to generate a workout from the prompt.");
     }
     return output;
   }
