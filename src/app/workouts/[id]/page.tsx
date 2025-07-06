@@ -5,18 +5,38 @@ import Image from 'next/image';
 import { useParams, useRouter } from 'next/navigation';
 import { useWorkouts } from '@/hooks/useWorkouts';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, CheckCircle, Clock, BarChartBig, Tag, Heart, PlayCircle, Loader2 } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Clock, BarChartBig, Tag, Heart, PlayCircle, Loader2, Trash2, Wand2 } from 'lucide-react';
 import type { WorkoutPlan } from '@/types';
 import { cn } from '@/lib/utils';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import { Input } from '@/components/ui/input';
+import { useToast } from '@/hooks/use-toast';
+import { generateWorkoutFromPrompt, type GenerateWorkoutFromPromptInput, type GenerateWorkoutFromPromptOutput } from '@/ai/flows/generate-suggestions-flow';
+
 
 export default function WorkoutDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const { getWorkoutById, toggleFavorite, favoritePlanIds, loading: workoutsLoading } = useWorkouts();
+  const { getWorkoutById, toggleFavorite, favoritePlanIds, loading: workoutsLoading, deleteWorkoutPlan, updateWorkoutPlan } = useWorkouts();
   const [plan, setPlan] = useState<WorkoutPlan | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // New state for AI update
+  const [updatePrompt, setUpdatePrompt] = useState('');
+  const [isUpdating, setIsUpdating] = useState(false);
+  const { toast } = useToast();
 
   const id = typeof params.id === 'string' ? params.id : '';
 
@@ -28,6 +48,75 @@ export default function WorkoutDetailPage() {
     }
   }, [id, getWorkoutById, workoutsLoading]);
   
+  const handleDelete = () => {
+    if (!plan) return;
+    toast({
+      title: 'Plan Deleted',
+      description: `"${plan.name}" has been removed.`,
+    });
+    deleteWorkoutPlan(plan.id);
+  };
+
+  const handleUpdate = async () => {
+    if (!plan || !updatePrompt.trim()) return;
+
+    setIsUpdating(true);
+
+    try {
+      // Convert current plan instructions to AI-friendly format
+      const currentExercises = plan.instructions.map(inst => {
+        const parts = inst.split(':');
+        return {
+          name: parts[0]?.trim() || 'Exercise',
+          details: parts.slice(1).join(':').trim() || 'No details',
+        };
+      });
+
+      const history = [{
+        role: 'model' as const,
+        content: JSON.stringify({
+          planName: plan.name,
+          planDescription: plan.description,
+          category: plan.category,
+          difficulty: plan.difficulty,
+          duration: plan.duration,
+          exercises: currentExercises,
+        })
+      }];
+
+      const input: GenerateWorkoutFromPromptInput = {
+        prompt: updatePrompt,
+        history,
+      };
+
+      const output: GenerateWorkoutFromPromptOutput = await generateWorkoutFromPrompt(input);
+      
+      const updatedPlanData = {
+        name: output.planName,
+        description: output.planDescription,
+        category: output.category,
+        difficulty: output.difficulty,
+        duration: output.duration,
+        instructions: output.exercises.map(ex => `${ex.name}: ${ex.details}`),
+      };
+
+      // Call context function to update the plan
+      updateWorkoutPlan(plan.id, updatedPlanData);
+      const updatedPlan = getWorkoutById(plan.id);
+      setPlan(updatedPlan || null);
+
+
+      toast({ title: 'Plan Updated!', description: 'Your workout plan has been modified by AI.' });
+      setUpdatePrompt(''); // Clear prompt
+    } catch (error) {
+      console.error("AI update failed:", error);
+      toast({ title: "AI Error", description: "Something went wrong while updating the plan. Please try again.", variant: "destructive" });
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+
   if (loading || workoutsLoading) {
     return (
       <div className="flex justify-center items-center min-h-[calc(100vh-200px)]">
@@ -80,17 +169,40 @@ export default function WorkoutDetailPage() {
               {plan.duration && <Badge variant="outline" className="text-sm py-1 px-3"><Clock className="mr-1.5 h-4 w-4" />{plan.duration}</Badge>}
               {plan.difficulty && <Badge variant="outline" className="text-sm py-1 px-3"><BarChartBig className="mr-1.5 h-4 w-4" />{plan.difficulty}</Badge>}
             </div>
-            <Button
-              variant="default"
-              size="lg"
-              onClick={() => toggleFavorite(plan.id)}
-              className={cn(
-                "w-full md:w-auto transition-colors",
-                isFavorite ? "bg-destructive hover:bg-destructive/90" : "bg-primary hover:bg-primary/90"
-              )}
-            >
-              <Heart className="mr-2 h-5 w-5" /> {isFavorite ? 'Remove from Favorites' : 'Add to Favorites'}
-            </Button>
+            <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
+                <Button
+                variant="default"
+                size="lg"
+                onClick={() => toggleFavorite(plan.id)}
+                className={cn(
+                    "flex-grow transition-colors",
+                    isFavorite ? "bg-destructive hover:bg-destructive/90" : "bg-primary hover:bg-primary/90"
+                )}
+                >
+                <Heart className="mr-2 h-5 w-5" /> {isFavorite ? 'Remove from Favorites' : 'Add to Favorites'}
+                </Button>
+                <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                        <Button variant="outline" size="lg" className="flex-grow">
+                        <Trash2 className="mr-2 h-5 w-5" /> Delete Plan
+                        </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This action cannot be undone. This will permanently delete this workout plan.
+                        </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDelete} className={cn(buttonVariants({ variant: "destructive" }))}>
+                            Yes, delete plan
+                        </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+            </div>
           </div>
 
           <p className="text-lg text-muted-foreground">{plan.description}</p>
@@ -116,6 +228,24 @@ export default function WorkoutDetailPage() {
                 </li>
               ))}
             </ul>
+          </div>
+           <div className="space-y-4 pt-6 border-t">
+            <h3 className="text-2xl font-semibold font-headline flex items-center gap-2"><Wand2 className="h-6 w-6 text-primary" /> Update with AI</h3>
+            <p className="text-muted-foreground">
+              Need to make a change? Tell the AI what you want to modify, add, or remove. For example: "add a 10 minute warm up" or "replace push-ups with dumbbell press".
+            </p>
+            <div className="flex gap-2">
+              <Input
+                placeholder="e.g., make this a 30 minute workout"
+                value={updatePrompt}
+                onChange={(e) => setUpdatePrompt(e.target.value)}
+                disabled={isUpdating}
+                onKeyDown={(e) => e.key === 'Enter' && handleUpdate()}
+              />
+              <Button onClick={handleUpdate} disabled={isUpdating || !updatePrompt.trim()}>
+                {isUpdating ? <Loader2 className="animate-spin" /> : "Update"}
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>

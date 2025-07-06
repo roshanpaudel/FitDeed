@@ -4,12 +4,15 @@
 import type { WorkoutPlan, Category } from '@/types';
 import React, { createContext, useState, useEffect, ReactNode } from 'react';
 import { mockWorkoutPlans, mockCategories } from '@/lib/mock-data';
+import { useRouter } from 'next/navigation';
 
 interface WorkoutContextType {
   workoutPlans: WorkoutPlan[];
   categories: Category[];
   favoritePlanIds: string[];
   addWorkoutPlan: (plan: Omit<WorkoutPlan, 'id' | 'imageUrl'>) => Promise<void>;
+  updateWorkoutPlan: (planId: string, updatedData: Partial<Omit<WorkoutPlan, 'id' | 'imageUrl'>>) => void;
+  deleteWorkoutPlan: (planId: string) => void;
   toggleFavorite: (planId: string) => void;
   getWorkoutById: (id: string) => WorkoutPlan | undefined;
   getFavoriteWorkouts: () => WorkoutPlan[];
@@ -32,6 +35,8 @@ export const WorkoutProvider = ({ children }: { children: ReactNode }) => {
   const [categories, setCategories] = useState<Category[]>(mockCategories);
   const [favoritePlanIds, setFavoritePlanIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
+
 
   // Set initial state after mount to avoid hydration issues
   useEffect(() => {
@@ -56,6 +61,23 @@ export const WorkoutProvider = ({ children }: { children: ReactNode }) => {
     setWorkoutPlans(prevPlans => [newPlan, ...prevPlans]);
   };
 
+  const updateWorkoutPlan = (planId: string, updatedData: Partial<Omit<WorkoutPlan, 'id' | 'imageUrl'>>) => {
+    setWorkoutPlans(prevPlans =>
+      prevPlans.map(plan => {
+        if (plan.id === planId) {
+          return { ...plan, ...updatedData };
+        }
+        return plan;
+      })
+    );
+  };
+
+  const deleteWorkoutPlan = (planId: string) => {
+    setWorkoutPlans(prevPlans => prevPlans.filter(p => p.id !== planId));
+    setFavoritePlanIds(prevIds => prevIds.filter(id => id !== planId));
+    router.push('/workouts');
+  };
+
   const toggleFavorite = (planId: string) => {
     setFavoritePlanIds(prevIds => {
       const isFavorited = prevIds.includes(planId);
@@ -76,7 +98,7 @@ export const WorkoutProvider = ({ children }: { children: ReactNode }) => {
   };
   
   return (
-    <WorkoutContext.Provider value={{ workoutPlans, categories, favoritePlanIds, addWorkoutPlan, toggleFavorite, getWorkoutById, getFavoriteWorkouts, loading }}>
+    <WorkoutContext.Provider value={{ workoutPlans, categories, favoritePlanIds, addWorkoutPlan, updateWorkoutPlan, deleteWorkoutPlan, toggleFavorite, getWorkoutById, getFavoriteWorkouts, loading }}>
       {children}
     </WorkoutContext.Provider>
   );
