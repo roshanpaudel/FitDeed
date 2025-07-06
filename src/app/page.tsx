@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useWorkouts } from '@/hooks/useWorkouts';
-import { ArrowRight, Zap, Wand2, Loader2, ListPlus } from 'lucide-react';
+import { ArrowRight, Zap, Wand2, Loader2, ListPlus, RotateCcw } from 'lucide-react';
 import type { Category } from '@/types';
 import { useState } from 'react';
 import { Input } from '@/components/ui/input';
@@ -15,6 +15,13 @@ import { useToast } from '@/hooks/use-toast';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+
+// Type for conversation history item
+type HistoryItem = {
+    role: 'user' | 'model';
+    content: string;
+};
+
 
 // New component for the AI generation section
 function AiGenerationSection() {
@@ -25,6 +32,7 @@ function AiGenerationSection() {
     const [isGenerating, setIsGenerating] = useState(false);
     const [results, setResults] = useState<GenerateWorkoutFromPromptOutput | null>(null);
     const [selectedExerciseIndices, setSelectedExerciseIndices] = useState<number[]>([]);
+    const [history, setHistory] = useState<HistoryItem[]>([]);
 
     const handleGenerate = async () => {
         if (!prompt.trim()) {
@@ -32,13 +40,25 @@ function AiGenerationSection() {
             return;
         }
         setIsGenerating(true);
-        setResults(null);
-        setSelectedExerciseIndices([]);
+        
         try {
-            const input: GenerateWorkoutFromPromptInput = { prompt };
+            const input: GenerateWorkoutFromPromptInput = { 
+                prompt,
+                history,
+            };
             const output = await generateWorkoutFromPrompt(input);
+            
+            // Update results and history
             setResults(output);
-            // Auto-select all exercises by default
+            setHistory(prev => [
+                ...prev,
+                { role: 'user', content: prompt },
+                { role: 'model', content: JSON.stringify(output) }
+            ]);
+            
+            // Clear prompt for next instruction
+            setPrompt("");
+
             if (output?.exercises) {
                 setSelectedExerciseIndices(output.exercises.map((_, index) => index));
             }
@@ -77,8 +97,15 @@ function AiGenerationSection() {
         await addWorkoutPlan(newPlan);
 
         toast({ title: "Success!", description: `${results.planName} has been added. Find it in 'Workouts'.`, variant: "default"});
+        // Reset state after adding
+        handleStartNew();
+    };
+
+    const handleStartNew = () => {
         setResults(null);
         setSelectedExerciseIndices([]);
+        setHistory([]);
+        setPrompt('');
     };
     
     return (
@@ -86,37 +113,42 @@ function AiGenerationSection() {
             <div className="container mx-auto px-4">
                 <Wand2 className="h-12 w-12 text-primary mx-auto mb-4" />
                 <h1 className="text-4xl md:text-5xl font-bold font-headline mb-6 text-primary animate-slideInUp">
-                    Generate Your Perfect Workout
+                    {results ? 'Refine Your Plan' : 'Generate Your Perfect Workout'}
                 </h1>
                 <p className="text-lg md:text-xl text-foreground mb-8 max-w-2xl mx-auto animate-slideInUp" style={{ animationDelay: '0.2s' }}>
-                    Describe your ideal workout, and let our AI create a personalized plan for you to customize and save.
+                    {results ? 'Type a follow-up to change the plan, or start a new one.' : 'Describe your ideal workout, and let our AI create a personalized plan for you to customize and save.'}
                 </p>
                 <div className="max-w-2xl mx-auto animate-slideInUp" style={{ animationDelay: '0.4s' }}>
                     <div className="flex gap-2">
                         <Input
                             id="ai-prompt-home"
-                            placeholder="e.g., a 30-minute full body workout for beginners"
+                            placeholder={results ? "e.g., make it shorter or add abs" : "e.g., a 30-minute full body workout for beginners"}
                             value={prompt}
                             onChange={(e) => setPrompt(e.target.value)}
                             disabled={isGenerating}
                             className="text-base"
                             onKeyDown={(e) => e.key === 'Enter' && handleGenerate()}
                         />
-                        <Button onClick={handleGenerate} disabled={isGenerating} size="lg">
-                            {isGenerating ? <Loader2 className="animate-spin" /> : "Generate"}
+                        <Button onClick={handleGenerate} disabled={isGenerating || !prompt.trim()} size="lg">
+                            {isGenerating ? <Loader2 className="animate-spin" /> : (results ? "Update" : "Generate")}
                         </Button>
+                        {results && !isGenerating && (
+                            <Button onClick={handleStartNew} variant="outline" size="lg" title="Start New Plan">
+                                <RotateCcw />
+                            </Button>
+                        )}
                     </div>
                 </div>
 
-                {isGenerating && (
+                {isGenerating && !results && ( // Only show big loader on initial generation
                     <div className="mt-12 flex justify-center items-center">
                         <Loader2 className="h-10 w-10 animate-spin text-primary" />
                     </div>
                 )}
                 
-                {results && !isGenerating && (
+                {results && (
                     <div className="mt-12 text-left animate-fadeIn max-w-2xl mx-auto">
-                        <Card>
+                        <Card className={isGenerating ? "opacity-70 pointer-events-none" : ""}>
                             <CardHeader>
                                 <CardTitle className="text-2xl">{results.planName}</CardTitle>
                                 <CardDescription>{results.planDescription}</CardDescription>
@@ -137,7 +169,7 @@ function AiGenerationSection() {
                                                 checked={selectedExerciseIndices.includes(index)}
                                                 onCheckedChange={(checked) => handleExerciseSelectionChange(index, checked as boolean)}
                                             />
-                                            <Label htmlFor={`exercise-${index}`} className="flex flex-col cursor-pointer">
+                                            <Label htmlFor={`exercise-${index}`} className="flex flex-col cursor-pointer w-full">
                                                 <span className="font-medium">{exercise.name}</span>
                                                 <span className="text-sm text-muted-foreground">{exercise.details}</span>
                                             </Label>
@@ -150,7 +182,7 @@ function AiGenerationSection() {
                             <Button 
                                 size="lg" 
                                 onClick={handleAddPlan}
-                                disabled={selectedExerciseIndices.length === 0}
+                                disabled={selectedExerciseIndices.length === 0 || isGenerating}
                             >
                                 <ListPlus className="mr-2" />
                                 Add Plan ({selectedExerciseIndices.length} exercises)

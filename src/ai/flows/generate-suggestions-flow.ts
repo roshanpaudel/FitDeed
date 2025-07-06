@@ -1,7 +1,7 @@
 
 'use server';
 /**
- * @fileOverview An AI flow to generate a single workout plan with a list of exercises from a prompt.
+ * @fileOverview An AI flow to generate or update a single workout plan with a list of exercises from a prompt and conversation history.
  *
  * - generateWorkoutFromPrompt - A function that handles the workout generation process.
  * - GenerateWorkoutFromPromptInput - The input type for the function.
@@ -16,8 +16,15 @@ const ExerciseSchema = z.object({
   details: z.string().describe('The details of the exercise, such as reps, sets, or duration (e.g., "3 sets of 10-12 reps").'),
 });
 
+const HistoryItemSchema = z.object({
+    role: z.enum(['user', 'model']),
+    // The model content will be a structured JSON string of the GenerateWorkoutFromPromptOutput schema.
+    content: z.string(),
+});
+
 const GenerateWorkoutFromPromptInputSchema = z.object({
-  prompt: z.string().describe('The user\'s request for a workout plan.'),
+  prompt: z.string().describe("The user's request for a workout plan or a modification to the previous one."),
+  history: z.array(HistoryItemSchema).optional().describe('The conversation history to provide context for follow-up requests.'),
 });
 export type GenerateWorkoutFromPromptInput = z.infer<typeof GenerateWorkoutFromPromptInputSchema>;
 
@@ -39,14 +46,18 @@ const generateWorkoutPrompt = ai.definePrompt({
     name: 'generateWorkoutFromPrompt',
     input: { schema: GenerateWorkoutFromPromptInputSchema },
     output: { schema: GenerateWorkoutFromPromptOutputSchema },
-    prompt: `You are a world-class fitness expert. Your task is to analyze a user's prompt and generate a single, complete workout plan containing a list of exercises.
+    system: `You are a world-class fitness expert. Your task is to create a complete workout plan based on a user's prompt.
+If the user provides a follow-up request, you must modify the plan from the conversation history based on their new request. The model's turns in the history contain the JSON of the previously generated plan.
+Generate a new or updated plan with a name, description, category, difficulty, duration, and a list of exercises.
+Ensure you populate all fields in the output schema. If the prompt seems to be for a diet, you must still generate a workout and explain in the description that you can only generate workout plans.`,
+    prompt: `{{#if history}}
+This is the conversation history so far:
+{{#each history}}
+- {{this.role}}: {{{this.content}}}
+{{/each}}
+{{/if}}
 
-User's request: "{{prompt}}"
-
-Based on the request, generate a workout plan with a name, a short description, an appropriate category, difficulty, duration, and a list of exercises with their details (sets, reps, time, etc.).
-
-Ensure you populate all fields in the output schema. If the user's prompt seems to be for a diet, you must still generate a workout. Create a workout plan named "Request appears to be for a diet" and explain in the description that you can currently only generate workout plans based on their request.
-`,
+Now, process the following user request: "{{prompt}}"`,
 });
 
 const generateWorkoutFromPromptFlow = ai.defineFlow(
