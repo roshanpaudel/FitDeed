@@ -1,10 +1,11 @@
+
 'use client';
 
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { useParams, useRouter } from 'next/navigation';
 import { useWorkouts } from '@/hooks/useWorkouts';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, CheckCircle, Clock, BarChartBig, Tag, Heart, PlayCircle, Loader2, Trash2, Wand2 } from 'lucide-react';
